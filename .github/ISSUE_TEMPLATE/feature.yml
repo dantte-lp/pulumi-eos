@@ -1,0 +1,27 @@
+name: Feature request
+description: Propose a new resource, transport, or capability.
+labels: ["enhancement"]
+body:
+  - type: input
+    id: scope
+    attributes:
+      label: Scope
+      placeholder: "eos:l3:Vrf · gNMI subscribe · …"
+    validations:
+      required: true
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary
+    validations:
+      required: true
+  - type: textarea
+    id: motivation
+    attributes:
+      label: Motivation
+    validations:
+      required: true
+  - type: textarea
+    id: design
+    attributes:
+      label: Proposed design

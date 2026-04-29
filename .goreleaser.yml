@@ -1,0 +1,72 @@
+# goreleaser v2.x configuration for pulumi-eos.
+# Spec: https://goreleaser.com/customization/
+
+version: 2
+
+project_name: pulumi-eos
+
+before:
+  hooks:
+    - go mod tidy
+
+builds:
+  - id: pulumi-resource-eos
+    binary: pulumi-resource-eos
+    main: ./cmd/pulumi-resource-eos
+    env:
+      - CGO_ENABLED=0
+    flags:
+      - -trimpath
+    ldflags:
+      - -s -w
+      - -X github.com/dantte-lp/pulumi-eos/internal/version.Version={{ .Version }}
+      - -X github.com/dantte-lp/pulumi-eos/internal/version.GitCommit={{ .ShortCommit }}
+      - -X github.com/dantte-lp/pulumi-eos/internal/version.BuildDate={{ .Date }}
+    goos: [linux, darwin, windows]
+    goarch: [amd64, arm64]
+
+archives:
+  - id: pulumi-resource-eos
+    ids: [pulumi-resource-eos]
+    formats: [tar.gz]
+    name_template: "{{ .ProjectName }}-v{{ .Version }}-{{ .Os }}-{{ .Arch }}"
+    format_overrides:
+      - goos: windows
+        formats: [zip]
+    files:
+      - README.md
+      - LICENSE
+      - CHANGELOG.md
+
+checksum:
+  name_template: "{{ .ProjectName }}-v{{ .Version }}.SHA256SUMS"
+  algorithm: sha256
+
+sboms:
+  - artifacts: archive
+    documents: ["${artifact}.spdx.json"]
+
+signs:
+  - cmd: cosign
+    artifacts: checksum
+    args:
+      - sign-blob
+      - --yes
+      - --output-certificate=${certificate}
+      - --output-signature=${signature}
+      - ${artifact}
+    output: true
+
+snapshot:
+  version_template: "{{ .Tag }}-next"
+
+release:
+  github:
+    owner: dantte-lp
+    name: pulumi-eos
+  draft: false
+  prerelease: auto
+  mode: replace
+
+changelog:
+  disable: true

@@ -52,3 +52,9 @@ benchmark.txt
 # Generated docs build
 /site/
 docs/_build/
+
+# Local tool state (per-developer; not part of project sources)
+/.serena/
+/.claude/
+/.codex/
+/.cursor/

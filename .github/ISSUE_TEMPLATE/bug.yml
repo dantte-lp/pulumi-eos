@@ -1,0 +1,50 @@
+name: Bug report
+description: Report a defect in pulumi-eos.
+labels: ["bug"]
+body:
+  - type: input
+    id: provider-version
+    attributes:
+      label: pulumi-eos version
+      placeholder: "v0.0.0"
+    validations:
+      required: true
+  - type: input
+    id: pulumi-cli-version
+    attributes:
+      label: Pulumi CLI version
+      placeholder: "3.150.0"
+    validations:
+      required: true
+  - type: input
+    id: eos-version
+    attributes:
+      label: EOS / CVP version
+      placeholder: "EOS 4.36.0F · CVP 2026.1.0"
+  - type: textarea
+    id: repro
+    attributes:
+      label: Reproduction steps
+      placeholder: |
+        1. ...
+        2. ...
+        3. ...
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs
+      render: shell

@@ -1,0 +1,72 @@
+# .containerignore — build-context exclusions for Podman / Buildah.
+# See containers/common/docs/containerignore.5.md.
+#
+# Last-match-wins semantics. Use ! to negate.
+
+# VCS / IDE
+.git
+.gitattributes
+.gitignore
+.idea
+.vscode
+.worktrees
+*.swp
+*.swo
+.DS_Store
+
+# Build / generated artefacts
+bin/
+dist/
+build/
+sdk/
+schemas/build/
+reports/
+coverage.out
+coverage.html
+*.test
+*.prof
+
+# Local secrets / env
+.env
+.env.*
+*.pem
+*.key
+*.crt
+
+# Tests / examples (not needed in build image; dev container mounts source)
+test/
+testdata/
+examples/
+docs/
+**/*.md
+**/*.markdown
+
+# Re-include the canonical entrypoint docs that some tools read at runtime
+!cmd/**/*.md
+!internal/**/*.md
+!pkg/**/*.md
+
+# Container infra (not needed inside the resulting image)
+deployments/
+**/Containerfile*
+**/compose*.yml
+**/compose*.yaml
+**/*.containerignore
+
+# CI / workflows
+.github/
+
+# Linter / formatter configs (host-side)
+.golangci.yml
+.markdownlint-cli2.yaml
+.yamllint.yaml
+.cspell.json
+.commitlintrc.yaml
+.editorconfig
+.pre-commit-config.yaml
+
+# Node / Python local caches that may appear during dev
+node_modules/
+__pycache__/
+*.pyc
+.venv/

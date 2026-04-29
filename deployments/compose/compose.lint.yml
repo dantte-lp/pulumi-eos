@@ -1,0 +1,62 @@
+# compose.lint.yml — one-shot lint runners using the dev image.
+# Compose Specification compliant.
+
+name: pulumi-eos-lint
+
+services:
+  golangci-lint:
+    image: localhost/pulumi-eos-dev:local
+    profiles: ["lint"]
+    working_dir: /app
+    volumes:
+      - type: bind
+        source: ../..
+        target: /app
+    command: ["golangci-lint", "run", "./..."]
+
+  markdownlint:
+    image: localhost/pulumi-eos-dev:local
+    profiles: ["lint"]
+    working_dir: /app
+    volumes:
+      - type: bind
+        source: ../..
+        target: /app
+    command: ["markdownlint-cli2", "**/*.md"]
+
+  yamllint:
+    image: localhost/pulumi-eos-dev:local
+    profiles: ["lint"]
+    working_dir: /app
+    volumes:
+      - type: bind
+        source: ../..
+        target: /app
+    command: ["yamllint", "-c", ".yamllint.yaml", "."]
+
+  cspell:
+    image: localhost/pulumi-eos-dev:local
+    profiles: ["lint"]
+    working_dir: /app
+    volumes:
+      - type: bind
+        source: ../..
+        target: /app
+    command:
+      - "cspell"
+      - "--no-progress"
+      - "--no-summary"
+      - "--config"
+      - ".cspell.json"
+      - "**/*.md"
+      - "**/*.go"
+
+  vulncheck:
+    image: localhost/pulumi-eos-dev:local
+    profiles: ["lint"]
+    working_dir: /app
+    volumes:
+      - type: bind
+        source: ../..
+        target: /app
+    command: ["go", "run", "./scripts/vuln-audit.go"]

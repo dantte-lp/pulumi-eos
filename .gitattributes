@@ -1,0 +1,18 @@
+* text=auto eol=lf
+
+# Generated SDK code is not subject to manual review
+sdk/** linguist-generated=true
+schemas/build/** linguist-generated=true
+pkg/eos/internal/generated/** linguist-generated=true
+
+# Binary
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.pdf binary
+
+# Lockfiles end with newline
+go.sum text eol=lf
+go.mod text eol=lf

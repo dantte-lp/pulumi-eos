@@ -1,0 +1,74 @@
+# compose.dev.yml — Compose Specification (no version: key).
+# See: https://github.com/compose-spec/compose-spec/blob/main/spec.md
+#
+# Run with: podman-compose -f deployments/compose/compose.dev.yml up -d
+# Shell:    podman-compose -f deployments/compose/compose.dev.yml exec dev bash
+
+name: pulumi-eos
+
+services:
+  dev:
+    container_name: pulumi-eos-dev
+    image: localhost/pulumi-eos-dev:local
+    build:
+      context: ../..
+      dockerfile: deployments/containers/Containerfile.dev
+      args:
+        GO_VERSION: "1.26.2"
+        PULUMI_VERSION: "3.150.0"
+        GOLANGCI_LINT_VERSION: "v2.11.4"
+        GOVULNCHECK_VERSION: "v1.2.0"
+        OSV_SCANNER_VERSION: "v2.3.5"
+        NODE_MAJOR: "22"
+        PODMAN_PY_VERSION: "5.5.0"
+
+    init: true
+    command: ["sleep", "infinity"]
+    working_dir: /app
+
+    volumes:
+      - type: bind
+        source: ../..
+        target: /app
+        bind:
+          create_host_path: true
+      - type: bind
+        source: /run/podman/podman.sock
+        target: /run/podman/podman.sock
+
+    environment:
+      GOFLAGS: "-buildvcs=false"
+      GOCACHE: /tmp/go-cache
+      GOMODCACHE: /go/pkg/mod
+      CONTAINER_HOST: "unix:///run/podman/podman.sock"
+      PULUMI_SKIP_UPDATE_CHECK: "true"
+      NPM_CONFIG_UPDATE_NOTIFIER: "false"
+
+    cap_drop:
+      - ALL
+
+    security_opt:
+      - "label=disable"
+      - "no-new-privileges:true"
+
+    restart: unless-stopped
+
+    healthcheck:
+      test: ["CMD", "pgrep", "-x", "sleep"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+    develop:
+      watch:
+        - action: sync
+          path: ../..
+          target: /app
+          ignore:
+            - bin/
+            - dist/
+            - sdk/
+            - reports/
+            - node_modules/
+            - .git/
+            - .worktrees/

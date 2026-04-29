@@ -1,0 +1,54 @@
+# Build artifacts
+/bin/
+/dist/
+/build/
+/pulumi-resource-eos
+/pulumi-resource-eos.exe
+/pulumi-eos-gen
+/pulumi-eos-gen.exe
+
+# Coverage / profiles
+coverage.out
+coverage.html
+*.prof
+*.test
+fuzz/
+
+# Reports
+/reports/
+benchmark.txt
+
+# SDKs (generated)
+/sdk/
+
+# Pulumi schema build
+/schemas/build/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+
+# Podman / Docker
+.podman-cache/
+
+# Go
+*.exe
+*.dll
+*.so
+*.dylib
+
+# Local env
+.env
+.env.local
+*.tfvars
+*.pulumi.local.yaml
+
+# Logs
+*.log
+
+# Generated docs build
+/site/
+docs/_build/

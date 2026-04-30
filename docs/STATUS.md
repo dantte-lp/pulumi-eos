@@ -98,6 +98,8 @@ EVPN/VXLAN fabric.
 
 | Commit | Subject | Date |
 |---|---|---|
+| `0c746ab` | `build(lint): expand golangci-lint to 83 linters; harden gosec settings` | 2026-04-30 |
+| `32f3b1f` | `docs(audit): sync STATUS + plan to actual repo state` | 2026-04-30 |
 | `5a742d9` | `docs(status): record 363f31e hash for gNMI Tier-1 close` | 2026-04-30 |
 | `363f31e` | `feat(client): minimum gNMI client (Capabilities + Get) — Tier-1 close` | 2026-04-30 |
 | `fb0be36` | `feat(l2): eos:l2:MacAddressTable read-only data source via infer.Function` | 2026-04-30 |

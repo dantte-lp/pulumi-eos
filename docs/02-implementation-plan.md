@@ -146,8 +146,8 @@ sequenceDiagram
 
 | Gate | Tool | Trigger |
 |---|---|---|
-| Go static analysis (~70 linters) | `golangci-lint v2.11.4` (allowlist, severity-tiered) | `make lint` · CI |
-| SAST | `gosec` (audit), `semgrep p/golang` | `make semgrep` · CI |
+| Go static analysis (83 linters) | `golangci-lint v2.11.4` (allowlist, severity-tiered) | `make lint` · CI |
+| SAST | `gosec` embedded in golangci-lint (`severity: low`, `confidence: low`, audit-mode); `semgrep p/golang` host-side | `make lint` (gosec) · `make semgrep` · CI |
 | Vulnerability | `govulncheck v1.2.0` + `osv-scanner v2.3.5` (allowlist) | `make vulncheck` · CI |
 | Container scan | `trivy` (CRITICAL/HIGH) | CI |
 | Markdown | `markdownlint-cli2` | `make lint-md` · CI |
@@ -159,7 +159,7 @@ sequenceDiagram
 | Supply chain | OpenSSF Scorecard, CodeQL Go, Dependabot | scheduled |
 | Tests | `gotestsum` + `junit2html` | `make test-report` · CI |
 
-Severity → `error`: `gosec`, `errcheck`, `bodyclose`, `staticcheck`, `forcetypeassert`, `containedctx`, `nilnil`, `reassign`. All others → `warning`. No merge with unresolved `error`-tier findings.
+Severity → `error`: `gosec`, `errcheck`, `bodyclose`, `noctx`, `staticcheck`, `forcetypeassert`, `containedctx`, `nilnil`, `reassign`, `forbidigo`, `gomodguard`, `iotamixing`, `paralleltest`. All others → `warning`. No merge with unresolved `error`-tier findings.
 
 ## 5. Sprints
 

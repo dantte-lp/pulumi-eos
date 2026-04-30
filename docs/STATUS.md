@@ -8,7 +8,7 @@
 |---|---|---|---|
 | Phase 1 — Requirements | S1 | done | `docs/02-implementation-plan.md`, `docs/08-research-references.md` |
 | Phase 2 — Design | S2 — S3 | done (artefacts) | `docs/01-architecture.md`, `docs/03-resource-catalog.md`, `docs/04-provider-config.md` |
-| Phase 3 — Implementation | S4 — S9 | S4 + S5 done; S6 — S9 pending | per-sprint table below |
+| Phase 3 — Implementation | S4 — S9 | S4 done; S5 implementation done (RC tag pending); S6 — S9 pending | per-sprint table below |
 | Phase 4 — Verification | S10 — S11 | pending | — |
 | Phase 5 — Deployment | S12 | pending | — |
 | Phase 6 — Maintenance | continuous | pending | — |
@@ -20,12 +20,12 @@
 | S1 — Requirements | SRS, risk register, scope | done | `docs/02-implementation-plan.md` §6, §11; `docs/08-research-references.md` |
 | S2 — System design | Component diagram, sequence diagrams, transport matrix | done | `docs/01-architecture.md` |
 | S3 — Detailed design | Resource catalog + field shapes, ADRs | done (catalog), schema gen pending | `docs/03-resource-catalog.md`, `docs/04-provider-config.md` |
-| S4 — Foundation | Provider runtime, eAPI/CVP clients, cEOS integration, CI green; `eos:device:Configlet` lacuna | done | commits `f6ae43f`, `0117e8a`, `6565ccd`, `9fa0b40`, `eb6cdc8`, `98daa9c`, `d661199`, Configlet (this commit) |
-| S5 — L2 family | `Vlan`, `VlanRange`, `VlanInterface`, `Interface`, `PortChannel`, `EvpnEthernetSegment`, `Mlag`, `VxlanInterface`, `MacAddressTable`, `Varp`, `Stp`; `RawCli` escape; minimum gNMI client | done | shipped: `Vlan` (`fa20b40`), `VlanInterface` (`2a77f2e`), `Interface` (`449ea8e`), `PortChannel` + shared `SwitchportFields` (`b516f28`), `VxlanInterface` (`193a4e6`), `EvpnEthernetSegment` (`09dd4f1`), `Mlag` (`b3e2c5d`), `Stp` (`2a64a58`), `Varp` (`726b26c`), `VlanRange` (`5fa01a1`), `RawCli` (`f4adb59`), `MacAddressTable` (`fb0be36`), minimum gNMI client (this commit); 16/16 cEOS integration tests pass (incl. gNMI Capabilities). |
-| S6 — L3 family | `Vrf`, `RouterBgp` (peer-groups, EVPN AF), `Bfd`, `Rcf`, `Rpki`, `Vrrp`, `Pbr` | pending | — |
-| S7 — Security / Mgmt / Multicast / QoS | ACLs, AAA, MACsec, DHCP, Igmp / Pim / Msdp, QoS | pending | — |
-| S8 — CloudVision | `Workspace`, `Studio`, `ChangeControl`, `Configlet`, `Tag`, … | pending | — |
-| S9 — Day-2 / gNOI / drift | `OsImage`, `Reboot`, `Certificate`; gNMI Subscribe drift | pending | — |
+| S4 — Foundation | Provider runtime, eAPI/CVP clients, cEOS integration, CI green; `eos:device:Configlet` lacuna | done | commits `f6ae43f`, `0117e8a`, `6565ccd`, `9fa0b40`, `eb6cdc8`, `98daa9c`, `d661199`, Configlet (`be4d732`) |
+| S5 — L2 family | `Vlan`, `VlanRange`, `VlanInterface`, `Interface`, `PortChannel`, `EvpnEthernetSegment`, `Mlag`, `VxlanInterface`, `MacAddressTable`, `Varp`, `Stp`; `RawCli` escape; minimum gNMI client | implementation done; sprint-exit (RC tag) pending | shipped: `Vlan` (`fa20b40`), `VlanInterface` (`2a77f2e`), `Interface` (`449ea8e`), `PortChannel` + shared `SwitchportFields` (`b516f28`), `VxlanInterface` (`193a4e6`), `EvpnEthernetSegment` (`09dd4f1`), `Mlag` (`b3e2c5d`), `Stp` (`2a64a58`), `Varp` (`726b26c`), `VlanRange` (`5fa01a1`), `RawCli` (`f4adb59`), `MacAddressTable` (`fb0be36`), minimum gNMI client (`363f31e`); 16/16 cEOS integration tests pass (incl. gNMI Capabilities). RC-readiness still open: `schema.json` generation, `pulumi package gen-sdk` × 5, `v0.1.0-rc.1` tag (see Open commitments). |
+| S6 — L3 family | `Loopback`, `Vrf`, `Bfd`, `Interface` (routed), `StaticRoute`, `RouterBgp` (peer-groups + per-AF + per-VRF + EVPN AF + RD/RT), `RoutingPolicy`, `Rcf`, `Rpki`, `RouterOspf`, `GreTunnel`, `Vrrp`, `PolicyBasedRouting`, `ResilientEcmp` (14 resources, see Tier 2 ordering) | pending | — |
+| S7 — Security / Mgmt / Multicast / QoS | 46 resources across `eos:management` (11), `eos:security` (19), `eos:multicast` (6), `eos:qos` (6) + L2 access (`Dot1x`, `Mab`, `Pvlan`, `StormControl`); see Tier 3a — 3g ordering | pending | — |
+| S8 — CloudVision | `Workspace`, `Studio`, `ChangeControl`, `Configlet`, `Tag`, `Device`, `Inventory`, `ServiceAccount`, `IdentityProvider`, `ImageBundle`, `Compliance`, `Alert` (12 resources); post-S8: `Dashboard`, `Audit` (Tier 4) | pending | — |
+| S9 — Day-2 / gNOI / drift | `OsImage`, `Reboot`, `Certificate` (Tier 5); gNOI client (separate from gNMI); gNMI `Subscribe(last-configuration-timestamp)` drift; `pulumi refresh` accuracy report | pending | — |
 | S10 — System test | Matrix (cEOS 4.30 — 4.36 × CVP 2024.3 — 2026.1) + soak | pending | — |
 | S11 — UAT & docs | UAT; Pulumi Registry intake | pending | — |
 | S12 — Release | `v1.0.0` | pending | — |
@@ -37,11 +37,11 @@
 | Build | `go build ./...` (Go 1.26.2) | pass |
 | Unit tests + race | `go test -race -count=1 ./...` | pass |
 | Integration | `make test-integration` against cEOS 4.36.0.1F | pass |
-| Go static analysis | `golangci-lint v2.11.4` (allowlist, ~70 linters) | 0 issues |
-| SAST | `gosec` (audit) | 0 issues |
+| Go static analysis | `golangci-lint v2.11.4` (allowlist, ~70 linters incl. `gosec`, `protogetter`) | 0 issues |
+| SAST | `semgrep` (`p/golang`, host-side) | clean |
 | Vulnerability | `govulncheck v1.2.0` + `osv-scanner v2.3.5` | no vulnerabilities |
 | Markdown | `markdownlint-cli2` | 0 errors |
-| Mermaid | `@mermaid-js/mermaid-cli` (`mmdc`) render | 6 diagrams parsed, 0 failures |
+| Mermaid | `@mermaid-js/mermaid-cli` (`mmdc`) render | 5 diagrams parsed, 0 failures |
 | YAML | `yamllint` | clean |
 | Spelling | `cspell` | clean |
 | LSP | `gopls v0.21.1` | references resolve across packages |
@@ -98,6 +98,7 @@ EVPN/VXLAN fabric.
 
 | Commit | Subject | Date |
 |---|---|---|
+| `5a742d9` | `docs(status): record 363f31e hash for gNMI Tier-1 close` | 2026-04-30 |
 | `363f31e` | `feat(client): minimum gNMI client (Capabilities + Get) — Tier-1 close` | 2026-04-30 |
 | `fb0be36` | `feat(l2): eos:l2:MacAddressTable read-only data source via infer.Function` | 2026-04-30 |
 | `f4adb59` | `feat(device): eos:device:RawCli — diff-driven idempotent escape hatch` | 2026-04-30 |
@@ -115,6 +116,7 @@ EVPN/VXLAN fabric.
 | `9a795dc` | `docs(go-style): Go 1.26 patterns, antipatterns, project standards` | 2026-04-30 |
 | `2a77f2e` | `feat(l2): eos:l2:VlanInterface (SVI) over eAPI config-session` | 2026-04-30 |
 | `fa20b40` | `feat(l2): eos:l2:Vlan resource with full CRUD over eAPI config-session` | 2026-04-30 |
+| `d661199` | `docs(plan): expand catalog per Supported Features Matrix; add STATUS dashboard` | 2026-04-30 |
 | `f6ae43f` | `chore(build): bootstrap pulumi-eos repository` | 2026-04-30 |
 | `0117e8a` | `ci(release): add release pipeline, goreleaser, codeowners, issue templates` | 2026-04-30 |
 | `6565ccd` | `feat(provider): wire pulumi-go-provider runtime, eAPI/CVP clients, device canary` | 2026-04-30 |

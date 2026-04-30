@@ -9,6 +9,60 @@ and this project adheres to [Semantic Versioning 2.0.0](https://semver.org/spec/
 
 ### Added
 
+- `eos:l3:Rcf` resource (S6, Tier 2 #12, commit `8e02a46` — supersedes
+  the v0 `fbdfbb5`): EOS Routing Control Function code unit, the
+  programmable alternative to route-maps. Three mutually-exclusive
+  delivery modes:
+  - `Code` — inline RCF source pushed via the eAPI rich-command form
+    (`{cmd: "code unit X", input: "<source>\nEOF\n"}`) per EOS Command
+    API Guide §1.2.3 + TOI 19238. Pulumi-native primary path.
+  - `SourceFile` — pre-staged path on flash, emits
+    `code [unit X] source pulled-from <storage:path>`.
+  - `SourceUrl` — `pull [unit X] replace <url>` over http / https /
+    ftp / tftp / scp.
+  Foundational eapi additions: `eapi.Command{Cmd, Input}` rich-command
+  type, `eapi.Client.RunCmdsRich(...)`, `eapi.Session.StageRich(...)`.
+  Bypasses goeapi v1.0.0's `[]string`-only `RunCommands` (no `input`
+  field) by crafting JSON-RPC directly. Unblocks any future resource
+  needing multi-line stdin (banner, comment, on-box config-replace).
+  Source: EOS User Manual §16.8; TOI 15102; TOI 19238; TOI 15859.
+- `eos:l3:AsPathAccessList` resource (S6, Tier 2 #11, commit
+  `888a110`): EOS BGP AS-path access-list. Closes the RoutingPolicy
+  5/5 decomposition. Args: `name` (PK), `entries [{action, regex}]`.
+  Discovery: cEOS auto-appends an `any` AS-set type token to every running-
+  config entry; the parser strips it so `state.Entries[].Regex`
+  matches user input verbatim. Source: EOS User Manual §15.6.
+- `eos:l3:ExtCommunityList` resource (S6, Tier 2 #10, commit
+  `51416dc`): EOS BGP extended-community-list. Args: `name` (PK),
+  `listType` (standard|regexp), `entries [{action, type rt|soo for
+  standard, value}]`. Mirrors CommunityList's eAPI quirk — cEOS uses
+  `regexp` (not `expanded` per User Manual). Standard entries carry
+  a `type` prefix (`rt`/`soo`) on the wire; regexp entries do not.
+  Source: EOS User Manual §15.5; TOI 13855.
+- `eos:l3:CommunityList` resource (S6, Tier 2 #9, commit `1566544`):
+  EOS BGP community-list. Args: `name` (PK), `type` (standard
+  default | regexp), `entries [{action, value}]`. Standard values
+  validate against the well-known keyword set
+  (`internet`/`local-as`/`no-advertise`/`no-export`/`GSHUT`),
+  `aa:nn` pairs, or numeric 0..4294967040. Discovery: cEOS 4.36 uses
+  `regexp` keyword (not `expanded` as the EOS User Manual §15.5
+  documents); the resource always renders the form the device
+  accepts. Source: EOS User Manual §15.5; TOI 14078.
+- `eos:l3:RouteMap` resource (S6, Tier 2 #8, commits `d50fc2a` +
+  `72c7db5`): EOS named route-map with sequenced match/set clauses.
+  Composes with PrefixList / CommunityList / ExtCommunityList /
+  AsPathAccessList and BGP peer-group inbound/outbound filters.
+  v0 surface — match (ipAddressPrefixList, community, extcommunity,
+  asPath, interface, tag, metric, localPreference, origin igp/egp/
+  incomplete, sourceProtocol connected/static/isis/ospf/bgp/rip) +
+  set (community + additive/none, extcommunity rt + additive,
+  localPreference, metric N|+N|-N delta, asPathPrepend, ipNextHop
+  ip|unchanged|self, origin, tag) + continue. The
+  `extcommunityRtAdditive` flag (`72c7db5`) closed the audit gap
+  documented in STATUS Open commitments: catalog § Routing-policy
+  match/set listed `set extcommunity rt <rt> [additive]` but v0
+  rendered the bare form only. Source: EOS User Manual §15.6;
+  TOI 14078; TOI 13855; TOI 14045.
 - `eos:l3:PrefixList` resource (S6, Tier 2 #7, commit `11a4cd6`): IPv4
   prefix-list with named sequenced entries. Args: `name` (PK), `remark`,
   `entries [{seq, action permit|deny, prefix CIDR, eq | ge[le] | le}]`.
@@ -253,6 +307,17 @@ and this project adheres to [Semantic Versioning 2.0.0](https://semver.org/spec/
 
 ### Changed
 
+- 7-standards audit (commit `cabe86c`): close the
+  Keep-a-Changelog 1.1.0 + Conventional Commits 1.0.0 +
+  containers.conf.5 audit. CHANGELOG re-aligned to actual repo
+  state. `.commitlintrc.yaml` scope-enum extended with
+  `client / status / audit / verify / plugin / multicast / qos`
+  (used in 7 recent commits). New
+  `deployments/containers/containers.conf` pins userns=keep-id,
+  default capabilities, init=true, network_backend=netavark,
+  pull_policy=missing, compose_providers=[podman-compose],
+  stop_timeout=10. Apply via
+  `export CONTAINERS_CONF=$(pwd)/deployments/containers/containers.conf`.
 - `docs/05-development.md` and `docs/06-testing.md` (commits
   `fabf547`, `7ee0fd7`): mandatory per-resource verification rules
   documented; `make verify` introduced as the canonical pre-commit

@@ -279,6 +279,8 @@
     "listtype",
     "aspath",
     "ASPATH",
+    "userns",
+    "netavark",
     "trivy",
     "unparam",
     "vlan",

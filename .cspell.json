@@ -111,6 +111,7 @@
     "BPDU",
     "canonicalises",
     "normalises",
+    "vlanrange",
     "serviceaccount",
     "softwaremanagement",
     "autonumber",

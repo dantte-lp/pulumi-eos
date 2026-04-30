@@ -50,6 +50,7 @@ func New() (provider.Provider, error) {
 			infer.Resource(&l2.Mlag{}),
 			infer.Resource(&l2.Stp{}),
 			infer.Resource(&l2.Varp{}),
+			infer.Resource(&l2.VlanRange{}),
 		).
 		Build()
 }

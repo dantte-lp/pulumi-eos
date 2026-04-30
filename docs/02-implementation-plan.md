@@ -98,7 +98,7 @@ flowchart LR
 
 ### 3.2 Resources (initial coverage)
 
-Aligned with the [EOS Supported Features Matrix 4.35.0F](https://www.arista.com/en/support/product-documentation/supported-features) and Uzum production design (`um-docs`). Detailed shape per resource lives in `docs/03-resource-catalog.md`.
+Aligned with the [EOS Supported Features Matrix 4.35.0F](https://www.arista.com/en/support/product-documentation/supported-features). Detailed shape per resource lives in `docs/03-resource-catalog.md`.
 
 | Module | Resources |
 |---|---|

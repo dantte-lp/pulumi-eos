@@ -1,0 +1,15 @@
+{
+  "name": "pulumi-eos-local",
+  "description": "Project-local marketplace exposing the pulumi-eos-dev plugin to anyone who clones this repository.",
+  "owner": {
+    "name": "pulumi-eos contributors"
+  },
+  "plugins": [
+    {
+      "name": "pulumi-eos-dev",
+      "source": ".claude/plugins/pulumi-eos-dev",
+      "description": "cEOS lifecycle skills, integration test runner, quality gates, resource scaffolding, arista-mcp ground-truth check.",
+      "version": "0.1.0"
+    }
+  ]
+}

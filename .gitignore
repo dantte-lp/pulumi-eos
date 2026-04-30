@@ -53,9 +53,13 @@ benchmark.txt
 /site/
 docs/_build/
 
-# Local tool state (per-developer; not part of project sources)
+# Local tool state (per-developer; not part of project sources).
+# `.claude/plugins/` and `.claude-plugin/` ARE committed — they ship the
+# project plugin marketplace. Everything else under `.claude/` (settings,
+# transcripts, etc.) is per-developer and ignored.
 /.serena/
-/.claude/
+/.claude/*
+!/.claude/plugins/
 /.codex/
 /.cursor/
 

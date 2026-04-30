@@ -1,0 +1,11 @@
+{
+  "name": "pulumi-eos-dev",
+  "description": "Project-local skills for pulumi-eos: cEOS lifecycle, integration test runner, quality gates, resource scaffolding.",
+  "version": "0.1.0",
+  "author": {
+    "name": "pulumi-eos contributors"
+  },
+  "homepage": "https://github.com/dantte-lp/pulumi-eos",
+  "repository": "https://github.com/dantte-lp/pulumi-eos",
+  "license": "Apache-2.0"
+}

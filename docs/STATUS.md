@@ -68,4 +68,4 @@
 | `6565ccd` | `feat(provider): wire pulumi-go-provider runtime, eAPI/CVP clients, device canary` | 2026-04-30 |
 | `9fa0b40` | `fix(ci): make all doc lint gates pass — mermaid, markdownlint, cspell, yamllint` | 2026-04-30 |
 | `eb6cdc8` | `test(integration): cEOS 4.36.0.1F live test stack — show version + session lifecycle` | 2026-04-30 |
-| `98daa9c` | `docs(catalog): expand resource catalog from um-docs network plan + arista-mcp` | 2026-04-30 |
+| `98daa9c` | `docs(catalog): expand resource catalog from arista-mcp` | 2026-04-30 |

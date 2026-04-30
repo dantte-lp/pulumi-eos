@@ -7,11 +7,10 @@
 
 Sources:
 
-- Field-shape requirements derived from `/opt/projects/repositories/um-docs/docs/infrastructure/`
-  (P-04 ASN, P-05 VLAN/VNI/RT, P-06 naming, P-08 EVPN/VXLAN, P-09 underlay,
-  P-10 overlay, P-11 ESI, P-12 QoS, P-13 border, P-14 firewall insertion,
-  P-15 H-fabric, P-22 BGP policy, P-26 DCI, P-27 BRT BGP).
-- Feature confirmation via `arista-mcp` against the EOS 4.30+ corpus.
+- Field shapes derived from the official EOS User Manual and per-feature
+  Theory-of-Operation (TOI) documents indexed in `arista-mcp` against the
+  EOS 4.30+ corpus.
+- The `EOS Supported Features Matrix 4.35.0F` for per-platform constraints.
 
 ## `eos:device`
 
@@ -54,7 +53,7 @@ Sources:
 | `Interface` (routed) | eAPI · config session | S6 | `no switchport`, `vrf`, `ip address`, `mtu`, sub-interfaces (`Eth11.4011 / encapsulation dot1q vlan 4011`), `bfd interval N min-rx N multiplier N`. |
 | `StaticRoute` | eAPI · config session | S6 | `ip route <prefix> <next-hop\|interface> [vrf X] [tag N] [name S] [metric N]`. |
 | `RouterBgp` | eAPI · config session | S6 | See **§ BGP shape** below. |
-| `RouterOspf` | eAPI · config session | S6 | Even though Uzum rejects OSPF, ship for other consumers; per-VRF instance, area, network, BFD, MD5, redistribution. |
+| `RouterOspf` | eAPI · config session | S6 | per-VRF instance, area, network, BFD, MD5 authentication, redistribution. |
 | `RouterIsis` | eAPI · config session | post-S9 | Stretch goal; same shape as OSPF. |
 | `Bfd` | eAPI · config session | S6 | Global `bfd` on/off, per-interface `bfd interval N min-rx N multiplier N`, per-peer `fall-over bfd`. |
 | `RoutingPolicy` | eAPI · config session | S6 | `route-map`, `prefix-list`, `community-list`, `extcommunity-list regexp`, `as-path access-list`, with full match/set vocabulary (see **§ Routing-policy match/set**). |
@@ -109,11 +108,11 @@ Per-VRF (`vrf {name}`):
 
 Required field shapes, not always default:
 
-- 4-byte ASN in **both** `asplain` and `asdot` formats (P-08:179).
-- `RD` `<router-id>:<L3 VNI>` per VTEP (RD-18:147).
-- `RT` type 0x02 with **admin AS frozen at `4200000000`** distinct from
-  router-AS — provider must accept `rt_admin_asn` separate from
-  `local_asn` (P-08:179-216, P-10:127).
+- 4-byte ASN in **both** `asplain` and `asdot` formats (RFC 5396).
+- `RD` `<router-id>:<L3 VNI>` per VTEP (RFC 4364 §4.2 type 1 RD).
+- `RT` type 0x02 supports an admin-AS distinct from the router AS — the
+  provider accepts `rt_admin_asn` separate from `local_asn` so deployments
+  using a fabric-wide constant for RTs are representable (RFC 4360 §3.2).
 - `password 7 <encrypted>` — type-7 obfuscation hint.
 
 ### Routing-policy match/set
@@ -231,15 +230,12 @@ matrix. Known gaps observed in production hardware:
 
 | Platform | Gap | Citation |
 |---|---|---|
-| Trident-3 (DCS-7050CX3M-32S, DCS-7050SX3) | No EVPN Gateway VXLAN-VXLAN A/A multihoming. | um-docs P-08:147-163 |
-| Trident-3 | No EVPN VXLAN L2 DCI. | um-docs P-08:147-163 |
-| Trident-3 | No VLAN-aware bundle (RFC 7432 § 6.3). | um-docs P-08:147-163 |
-| Trident-3 | No multi-domain VRF. | um-docs P-08:147-163 |
-| 7050X3 | GRE: no keepalive; control-plane MTU only; no MSS-clamp on tunnel; IPv4 only; max 256 tunnels. | um-docs P-27:269-308 |
-| BRT 7050SX3 | FIB cap 256k; license-tied. No FullView from upstream. | um-docs P-27 |
-| HLF 7050CX4M | Uplink Eth49-56 MTU limit 9236 due to MACsec drop limit. | um-docs P-08:36-105, TOI 21054 |
-| FPR-4115 / FMC | ECMP zone limit 8 → 6-way limit per env-VRF. | um-docs P-14:155-176 |
-| PA-1420 | A/S only; A/A not supported. | um-docs P-14:217-220 |
+| Trident-3 (DCS-7050CX3M-32S, DCS-7050SX3) | No EVPN Gateway VXLAN-VXLAN A/A multihoming. | EOS Supported Features Matrix 4.35.0F. |
+| Trident-3 | No EVPN VXLAN L2 DCI. | EOS Supported Features Matrix 4.35.0F. |
+| Trident-3 | No VLAN-aware bundle (RFC 7432 § 6.3). | EOS Supported Features Matrix 4.35.0F. |
+| Trident-3 | No multi-domain VRF. | EOS Supported Features Matrix 4.35.0F. |
+| 7050X3 | GRE: no keepalive; control-plane MTU only; no MSS-clamp on tunnel; IPv4 only; max 256 tunnels. | EOS TOI 14271 (GRE). |
+| 7050CX4M | Uplink ports MTU upper bound is constrained when the MACsec encryption is enabled. | EOS TOI 21054 (HLF MACsec MTU). |
 
 ## Defaults to follow when building resources
 

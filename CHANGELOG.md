@@ -150,6 +150,11 @@ and this project adheres to [Semantic Versioning 2.0.0](https://semver.org/spec/
 - `cmd/pulumi-eos-gen` placeholder binary. Will be reintroduced as a
   fully-implemented tool when SDK / schema generation enters the active
   sprint.
+- All references to private / external production deployments scrubbed
+  from `docs/03-resource-catalog.md`, `docs/02-implementation-plan.md`,
+  `docs/STATUS.md`. Citations now point exclusively to the EOS User
+  Manual, per-feature TOIs, the EOS Supported Features Matrix 4.35.0F,
+  and IETF RFCs.
 
 ### Changed
 

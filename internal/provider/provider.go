@@ -59,6 +59,7 @@ func New() (provider.Provider, error) {
 			infer.Resource(&l3.Bfd{}),
 			infer.Resource(&l3.Subinterface{}),
 			infer.Resource(&l3.StaticRoute{}),
+			infer.Resource(&l3.RouterBgp{}),
 		).
 		WithFunctions(
 			infer.Function(&l2.MacAddressTable{}),

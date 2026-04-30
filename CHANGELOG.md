@@ -9,6 +9,101 @@ and this project adheres to [Semantic Versioning 2.0.0](https://semver.org/spec/
 
 ### Added
 
+- `eos:l3:PrefixList` resource (S6, Tier 2 #7, commit `11a4cd6`): IPv4
+  prefix-list with named sequenced entries. Args: `name` (PK), `remark`,
+  `entries [{seq, action permit|deny, prefix CIDR, eq | ge[le] | le}]`.
+  Validation: seq 0..65535 (unique within list), v4-only CIDR, mask range
+  1..32, eq XOR ge/le, ge ≤ le, ge ≥ prefix length. Update uses
+  negate-then-rebuild so stale `seq N` lines cannot leak across versions.
+  Read parses `show running-config | grep prefix-list` (single-word EOS
+  pipe-grep) + filter `ip prefix-list <name>` lines client-side.
+  Catalog change: `eos:l3:RoutingPolicy` row decomposed into 5 atomic
+  resources (`PrefixList`, `RouteMap`, `CommunityList`, `ExtCommunityList`,
+  `AsPathAccessList`); l3 catalog 16 → 20, total 94 → 98. Source: EOS
+  User Manual §15.4.1.61.
+- `eos:l3:RouterBgp` v0 resource (S6, Tier 2 #6, commit `1574102`):
+  global EOS BGP routing instance. v0 surface scoped to leaf-spine
+  EVPN/VXLAN demo (S6 exit-criterion). Args: `asn` (PK), `routerId`,
+  `noDefaultIpv4Unicast`, `maximumPaths {paths, ecmp}`, `bfd`, plus 4
+  nested arrays — `peerGroups` (name, remoteAs, updateSource,
+  ebgpMultihop, sendCommunity, maximumRoutes, bfd, description),
+  `neighbors` (address IPv4 PK, peerGroup XOR remoteAs, description),
+  `addressFamilies` (name ipv4|ipv6|evpn, activate / deactivate per-PG
+  lists), `vrfs` (name, rd, routeTargetImport/ExportEvpn, routerId,
+  redistribute connected|static|attached-host). Render order matches
+  `show running-config` canonical emit order; sub-arrays sorted on
+  render for stable diffs. Update re-emits the full block; EOS' session
+  diff computes the minimum delta — destructive negate-then-rebuild
+  deliberately avoided to prevent dynamic-peer flap during commit.
+  Higher-fidelity knobs (RCF, route-maps in PG, dampening,
+  graceful-restart, RPKI, per-VRF-AF redistribute filters) follow when
+  consumers require them. Source: EOS User Manual §16; TOI 14091.
+- `eos:l3:StaticRoute` resource (S6, Tier 2 #5, commit `908af76`):
+  IPv4 static routes. Composite identity (vrf + prefix + nextHop +
+  distance) lets ECMP and floating-route sets coexist as independent
+  Pulumi rows. Args: `prefix` (PK), `nextHop` (PK, IPv4 or interface
+  form), `vrf` (PK when set), `distance` (PK, 1..255 default 1), `tag`
+  (0..2^32-1), `name` (no spaces), `metric` (>0), `track` (no spaces).
+  Next-hop accepts `Null0`, `Ethernet<N>[/<m>...][.<sub>]`,
+  `Loopback<N>`, `Management<N>`, `Port-Channel<N>[.<sub>]`, `Vlan<N>`,
+  `Vxlan<N>`. Discovery: EOS pipe-grep accepts only single-word
+  substring — `grep ^ip route` and `grep "ip route"` both return
+  empty; read uses `grep ip` + client-side filter. Source: EOS User
+  Manual §14.1.14.65.
+- `eos:l3:Subinterface` resource (S6, Tier 2 #4, commit `8b2dd6e`):
+  802.1Q L3 sub-interface (`Ethernet<N>.<sub>`,
+  `Port-Channel<N>.<sub>`). Args: `name` (PK, regex matched),
+  `encapsulationVlan` (1..4094 required), `description`, `ipAddress`
+  (IPv4 CIDR), `ipv6Address` (IPv6 CIDR), `vrf`, `mtu`, `shutdown`,
+  `bfd {interval, minRx, multiplier}`. Catalog rename:
+  `eos:l3:Interface (routed)` → `Subinterface` (avoids name clash with
+  `eos:l2:Interface`; parent's `no switchport` is owned by L2). Source:
+  EOS User Manual §13.7; TOI 13633; TOI 17032.
+- `eos:l3:Bfd` singleton (S6, Tier 2 #3, commit `eea0e74`): global
+  EOS BFD settings configured under `router bfd` (modal CLI introduced
+  in EOS 4.22.0F, TOI 14641). Args: `interval` (ms), `minRx` (ms),
+  `multiplier` (3..50), `slowTimer` (ms), `shutdown`. Validation:
+  interval/minRx/multiplier are bound — set all three or none. cEOS
+  4.36 quirk: `interval N min-rx N multiplier N` requires the trailing
+  `default` profile selector — bare form rejected with "Incomplete
+  command"; render emits the selector accordingly. Per-interface and
+  per-peer BFD knobs live on `eos:l2:Interface` /
+  `eos:l3:Subinterface` / `eos:l3:RouterBgp`.
+- `eos:l3:Vrf` resource (S6, Tier 2 #2, commit `c335d22`): EOS VRF
+  instance plus the global `(ip|ipv6) routing vrf <name>` toggles.
+  Args: `name` (PK, "default" reserved), `description`, `ipRouting`
+  (default true), `ipv6Routing` (default false). RD/RT belong to
+  `eos:l3:RouterBgp` per EOS BGP/MPLS L3 VPN TOI 14091, not to Vrf.
+- `eos:l3:Loopback` resource (S6, Tier 2 #1, commit `5dcc4df`): EOS
+  Loopback interface. Args: `number` (PK, 0..1000), `ipAddress` (IPv4
+  CIDR), `ipv6Address` (IPv6 CIDR), `vrf`, `description`, `shutdown`.
+  Validation: requires at least one of v4/v6; rejects 4-in-6;
+  `netip.ParsePrefix` for both families. Anchor for BGP router-id,
+  EVPN VTEP source, BFD multihop sessions.
+- Tier 1 closeout — minimum gNMI client (commit `363f31e`):
+  `internal/client/gnmi/` exposes `Dial`, `Capabilities`, `Get`, and
+  the `name[k=v]` path parser (10 unit tests + 1 cEOS Capabilities
+  integration test, gNMI 0.7.0 / 288 supported models confirmed).
+  `config.GNMIClient(ctx, host?, user?, pass?)` factory plumbed.
+  `scripts/integration-bootstrap.sh` enables `management api gnmi
+  transport grpc default port 6030` so cEOS serves gNMI on the port
+  already mapped to host 18830. Set/Subscribe deferred until first
+  consumer (S6 RouterBgp drift, S9 gNOI).
+- Tier 1 — `eos:l2:MacAddressTable` (commit `fb0be36`): read-only
+  data source via `infer.Function` (token `eos:l2:macAddressTable`).
+  Filters by VLAN id and entry type (dynamic / static / all).
+  Per-call host / username / password overrides on top of provider
+  config. Source: EOS Command API Guide §6.
+- Tier 1 — `eos:device:RawCli` (commit `f4adb59`): diff-driven
+  idempotent escape hatch. Inspects
+  `show session-config named <name> diffs` and aborts the session
+  whenever the diff is empty — re-applies against an already
+  converged device never touch running-config. Optional inverse
+  `deleteBody` applied on Delete.
+- Tier 1 — `eos:device:Configlet` (commit `be4d732`): atomic raw
+  CLI block via configuration session. SHA-256 digest of the
+  canonicalised body exposed as state for drift detection. Closes
+  the S4 lacuna documented in `docs/STATUS.md`.
 - `eos:l2:Vlan` resource (S5): full CRUD lifecycle (`Create` / `Read` /
   `Update` / `Delete` / `Diff`) over eAPI configuration sessions, using
   the `internal/client/eapi.Session` semaphore-protected commit/abort
@@ -158,6 +253,34 @@ and this project adheres to [Semantic Versioning 2.0.0](https://semver.org/spec/
 
 ### Changed
 
+- `docs/05-development.md` and `docs/06-testing.md` (commits
+  `fabf547`, `7ee0fd7`): mandatory per-resource verification rules
+  documented; `make verify` introduced as the canonical pre-commit
+  gate (= `all` + `test-integration-keep` — keeps cEOS running across
+  iterations to amortise the ~60 s bring-up). `make
+  test-integration-keep` is the new no-tear-down variant; the
+  original `make test-integration` retains the bring-up/tear-down
+  shape for CI. `lint-spell` routed through the dev container.
+  Plan §4 quality-gate row + STATUS quality-gates updated.
+- `.golangci.yml` (commit `0c746ab`): expanded from 74 to **83
+  linters**. Added: `embeddedstructfieldcheck`, `forbidigo`,
+  `funcorder`, `goconst`, `godox`, `gomodguard`, `iotamixing`,
+  `nestif`, `paralleltest`. `gosec` settings hardened to the
+  official reference (severity: low, confidence: low, audit-mode,
+  G301/G302/G306 file-mode policy). Severity `error` tier extended
+  to forbidigo / gomodguard / iotamixing / paralleltest.
+  `internal/client/eapi/client.go` and `internal/config/config.go`
+  reordered for `funcorder` compliance (unexported methods after
+  exported).
+- Catalog `eos:l3` row `RoutingPolicy` (commit `11a4cd6`):
+  decomposed into 5 atomic resources (`PrefixList`, `RouteMap`,
+  `CommunityList`, `ExtCommunityList`, `AsPathAccessList`) matching
+  EOS CLI structure; cross-references between them work without
+  circular Pulumi resource dependencies. l3 catalog 16 → 20, total
+  94 → 98.
+- `.commitlintrc.yaml` scope-enum extended with
+  `client / status / audit / verify / plugin / multicast / qos`
+  to cover scopes used in recent commits.
 - `deployments/containers/Containerfile.dev`: drop `mmdc` (Mermaid CLI)
   from the dev container — Chromium-deps bloat. `make lint-mmd` runs mmdc
   on the host or in CI's `lint-docs` job.

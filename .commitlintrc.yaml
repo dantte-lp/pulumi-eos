@@ -22,12 +22,15 @@ rules:
     - - device
       - l2
       - l3
+      - multicast
       - security
       - management
+      - qos
       - cvp
       - eapi
       - gnmi
       - gnoi
+      - client
       - provider
       - schema
       - sdk
@@ -40,6 +43,10 @@ rules:
       - lint
       - automation
       - examples
+      - audit
+      - status
+      - verify
+      - plugin
   subject-case:
     - 2
     - always

@@ -266,6 +266,8 @@
     "rbgp",
     "redist",
     "pfxlist",
+    "netip",
+    "amortise",
     "trivy",
     "unparam",
     "vlan",

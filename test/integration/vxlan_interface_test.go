@@ -21,7 +21,7 @@ import (
 //  3. Read — assert running-config has the source, UDP port, and VLAN→VNI
 //     line.
 //  4. Update — drop the original VLAN→VNI map, add a new one with udp-port
-//     65330. The `no interface Vxlan1` + recreate flow ensures stale rows
+//  65330. The `no interface Vxlan1` + recreate flow ensures stale rows
 //     are gone.
 //  5. Delete via `no interface Vxlan1`. Read after delete — interface gone.
 func TestEAPI_VxlanInterfaceLifecycle(t *testing.T) {

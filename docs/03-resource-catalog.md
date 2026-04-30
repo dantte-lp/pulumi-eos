@@ -50,7 +50,7 @@ Sources:
 |---|---|---|---|
 | `Loopback` | eAPI · config session | S6 | `Loopback0` (router-id + overlay source), `Loopback1` (per-device VTEP IP). |
 | `Vrf` | eAPI · config session | S6 | `instance {name}`, description, `rd auto\|<rd>`, per-AF `route-target import \| export evpn`, L3-VNI binding, `ip routing`. |
-| `Interface` (routed) | eAPI · config session | S6 | `no switchport`, `vrf`, `ip address`, `mtu`, sub-interfaces (`Eth11.4011 / encapsulation dot1q vlan 4011`), `bfd interval N min-rx N multiplier N`. |
+| `Subinterface` | eAPI · config session | S6 | 802.1Q-tagged routed sub-interface (`Eth11.4011`); `encapsulation dot1q vlan`, `vrf`, `ip address`, `ipv6 address`, `mtu`, `bfd interval N min-rx N multiplier N`. Parent's `no switchport` is owned by `eos:l2:Interface`. |
 | `StaticRoute` | eAPI · config session | S6 | `ip route <prefix> <next-hop\|interface> [vrf X] [tag N] [name S] [metric N]`. |
 | `RouterBgp` | eAPI · config session | S6 | See **§ BGP shape** below. |
 | `RouterOspf` | eAPI · config session | S6 | per-VRF instance, area, network, BFD, MD5 authentication, redistribution. |

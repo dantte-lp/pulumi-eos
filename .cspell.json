@@ -101,6 +101,8 @@
     "dont",
     "preempt",
     "revertive",
+    "errdisable",
+    "errdisabled",
     "serviceaccount",
     "softwaremanagement",
     "autonumber",

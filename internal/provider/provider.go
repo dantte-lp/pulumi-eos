@@ -47,6 +47,7 @@ func New() (provider.Provider, error) {
 			infer.Resource(&l2.PortChannel{}),
 			infer.Resource(&l2.VxlanInterface{}),
 			infer.Resource(&l2.EvpnEthernetSegment{}),
+			infer.Resource(&l2.Mlag{}),
 		).
 		Build()
 }

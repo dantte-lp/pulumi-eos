@@ -21,7 +21,7 @@
 | S2 — System design | Component diagram, sequence diagrams, transport matrix | done | `docs/01-architecture.md` |
 | S3 — Detailed design | Resource catalog + field shapes, ADRs | done (catalog), schema gen pending | `docs/03-resource-catalog.md`, `docs/04-provider-config.md` |
 | S4 — Foundation | Provider runtime, eAPI/CVP clients, cEOS integration, CI green | done | commits `f6ae43f`, `0117e8a`, `6565ccd`, `9fa0b40`, `eb6cdc8`, `98daa9c`, `d661199` |
-| S5 — L2 family | `Vlan`, `VlanInterface`, `Interface`, `PortChannel`, `EvpnEthernetSegment`, `Mlag`, `VxlanInterface`, `Stp`, … | in progress | `Vlan`, `VlanInterface`, `Interface`, `PortChannel` shipped (CRUD + Diff over eAPI config-session; shared `SwitchportFields` helpers; integration-tested on cEOS). |
+| S5 — L2 family | `Vlan`, `VlanRange`, `VlanInterface`, `Interface`, `PortChannel`, `EvpnEthernetSegment`, `Mlag`, `VxlanInterface`, `MacAddressTable`, `Varp`, `Stp`; `RawCli` escape; minimum gNMI client | in progress (6/11 core L2 resources shipped) | shipped: `Vlan` (`fa20b40`), `VlanInterface` (`2a77f2e`), `Interface` (`449ea8e`), `PortChannel` + shared `SwitchportFields` (`b516f28`), `VxlanInterface` (`193a4e6`), `EvpnEthernetSegment` (`09dd4f1`); 8/8 cEOS integration tests pass; pending: `Mlag`, `MacAddressTable`, `Varp`, `Stp`, `VlanRange`, `RawCli`, gNMI client. |
 | S6 — L3 family | `Vrf`, `RouterBgp` (peer-groups, EVPN AF), `Bfd`, `Rcf`, `Rpki`, `Vrrp`, `Pbr` | pending | — |
 | S7 — Security / Mgmt / Multicast / QoS | ACLs, AAA, MACsec, DHCP, Igmp / Pim / Msdp, QoS | pending | — |
 | S8 — CloudVision | `Workspace`, `Studio`, `ChangeControl`, `Configlet`, `Tag`, … | pending | — |
@@ -58,11 +58,15 @@
 
 | Commit | Subject | Date |
 |---|---|---|
-| `fa20b40` | `feat(l2): eos:l2:Vlan resource with full CRUD over eAPI config-session` | 2026-04-30 |
-| `2a77f2e` | `feat(l2): eos:l2:VlanInterface (SVI) over eAPI config-session` | 2026-04-30 |
-| `9a795dc` | `docs(go-style): Go 1.26 patterns, antipatterns, project standards` | 2026-04-30 |
+| `09dd4f1` | `feat(l2): eos:l2:EvpnEthernetSegment for EVPN multi-homing` | 2026-04-30 |
+| `193a4e6` | `feat(l2): eos:l2:VxlanInterface — overlay VTEP with VLAN/VRF→VNI maps` | 2026-04-30 |
+| `3581c37` | `fix(plugin): relocate pulumi-eos-dev to plugins/ and use ./ prefix in source` | 2026-04-30 |
+| `fcf1418` | `docs(plugin): pulumi-eos-dev project plugin; scrub external-citations leakage` | 2026-04-30 |
+| `b516f28` | `feat(l2): eos:l2:PortChannel + shared switchport helpers; clean stubs` | 2026-04-30 |
 | `449ea8e` | `feat(l2): eos:l2:Interface (physical Ethernet) over eAPI config-session` | 2026-04-30 |
-| `_pending_` | `feat(l2): eos:l2:PortChannel + shared SwitchportFields; device.readFacts wired; remove pulumi-eos-gen stub` | 2026-04-30 |
+| `9a795dc` | `docs(go-style): Go 1.26 patterns, antipatterns, project standards` | 2026-04-30 |
+| `2a77f2e` | `feat(l2): eos:l2:VlanInterface (SVI) over eAPI config-session` | 2026-04-30 |
+| `fa20b40` | `feat(l2): eos:l2:Vlan resource with full CRUD over eAPI config-session` | 2026-04-30 |
 | `f6ae43f` | `chore(build): bootstrap pulumi-eos repository` | 2026-04-30 |
 | `0117e8a` | `ci(release): add release pipeline, goreleaser, codeowners, issue templates` | 2026-04-30 |
 | `6565ccd` | `feat(provider): wire pulumi-go-provider runtime, eAPI/CVP clients, device canary` | 2026-04-30 |

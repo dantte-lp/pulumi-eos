@@ -11,3 +11,4 @@
 | [`06-testing.md`](06-testing.md) | Test layers (unit, integration, acceptance, matrix). |
 | [`07-release.md`](07-release.md) | Release pipeline, SBOM, signatures, SDK publishing. |
 | [`08-research-references.md`](08-research-references.md) | Source-of-truth research findings. |
+| [`09-go-style.md`](09-go-style.md) | Go 1.26 patterns, antipatterns, project standards. |

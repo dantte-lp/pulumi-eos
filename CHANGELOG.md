@@ -111,6 +111,15 @@ and this project adheres to [Semantic Versioning 2.0.0](https://semver.org/spec/
     `ImageBundle`, `Compliance`, `Alert`.
 - `docs/02-implementation-plan.md` §3.2 / §5: sprint scope (S5 — S9)
   expanded to match the resource catalog; S4 marked done.
+- `docs/09-go-style.md`: Go 1.26 patterns / antipatterns / project
+  standards. Adopts `new(value)`, `strings.SplitSeq`, `errors.AsType[T]`,
+  `slog.NewMultiHandler`, `os/signal.NotifyContext` cancel-cause,
+  `t.ArtifactDir()`, `crypto/sha3` zero values, TLS post-quantum hybrids.
+  Bans pointer-literal `&v` ceremony, `strings.Split` in `for-range`,
+  `math/rand` v1, log/log, plain `tls.Config{InsecureSkipVerify: true}`,
+  predeclared-name parameters, holding `sync.Mutex` across method
+  boundaries. References Green Tea GC, heap address randomization, and
+  the `goroutineleak` profile (dev-only).
 - `docs/STATUS.md`: live progress dashboard mapping commits to phases and
   sprints; per-gate quality status; open commitments.
 - `LICENSE` (Apache-2.0), `SECURITY.md`, `CONTRIBUTING.md`, `CODEOWNERS`,

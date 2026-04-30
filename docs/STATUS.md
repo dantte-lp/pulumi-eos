@@ -98,7 +98,7 @@ EVPN/VXLAN fabric.
 
 | Commit | Subject | Date |
 |---|---|---|
-| pending | `feat(l3): eos:l3:PrefixList; decompose catalog RoutingPolicy → 5 atomic resources` | 2026-04-30 |
+| `11a4cd6` | `feat(l3): eos:l3:PrefixList; decompose catalog RoutingPolicy → 5 atomic resources` | 2026-04-30 |
 | `1574102` | `feat(l3): eos:l3:RouterBgp v0 — globals + peer-groups + neighbors + AF + per-VRF RD/RT` | 2026-04-30 |
 | `7ee0fd7` | `docs(audit): close drift after Tier-2 progress and verify-gate rule` | 2026-04-30 |
 | `908af76` | `feat(l3): eos:l3:StaticRoute (ip route) with composite identity for ECMP / floating routes` | 2026-04-30 |

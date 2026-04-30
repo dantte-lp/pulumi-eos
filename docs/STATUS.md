@@ -94,7 +94,7 @@ EVPN/VXLAN fabric.
 | ~~Tier 1 — `eos:l2:MacAddressTable` (`infer.Function`)~~ shipped | S5 closeout | — |
 | ~~Tier 1 — minimum gNMI client (`internal/client/gnmi/`)~~ shipped | S5 closeout | — |
 | Audit gap — `eos:l2:Interface` per-port BFD timers | S6 closeout (catalog `Bfd` row) | — |
-| Audit gap — `eos:l3:RouteMap` `set extcommunity rt <rt> additive` flag | S6 closeout (catalog § Routing-policy match/set) | — |
+| ~~Audit gap — `eos:l3:RouteMap` `set extcommunity rt <rt> additive` flag~~ shipped | commit `72c7db5` | — |
 | Audit gap — `eos:l3:RouteMap` `match rpki invalid\|valid\|not-found` | follow `eos:l3:Rpki` (Tier 2 #13) | — |
 | Audit gap — `eos:l3:RouteMap` `match ip address access-list` | follow `eos:security:IpAccessList` (S7) | — |
 | Audit gap — `eos:l3:RouterBgp` v1 surface (per-PG route-map / rcf / password / local-as / default-originate; per-AF redistribute / network; per-VRF neighbors) | S6 closeout — driven by leaf-spine demo coverage gaps | — |
@@ -103,6 +103,7 @@ EVPN/VXLAN fabric.
 
 | Commit | Subject | Date |
 |---|---|---|
+| `72c7db5` | `feat(l3): close audit gap — RouteMap set extcommunity rt additive flag` | 2026-05-01 |
 | `888a110` | `feat(l3): eos:l3:AsPathAccessList — closes RoutingPolicy 5/5 decomposition` | 2026-05-01 |
 | `51416dc` | `feat(l3): eos:l3:ExtCommunityList (rt/soo standard + regexp)` | 2026-05-01 |
 | `1566544` | `feat(l3): eos:l3:CommunityList (standard + regexp; cEOS 4.36 keyword quirk)` | 2026-04-30 |

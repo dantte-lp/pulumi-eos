@@ -88,15 +88,10 @@ Where the project already uses (or should use) a Go 1.26 idiom:
 | `errors` | `errors.AsType[T]()` for type-asserted errors | every CRUD path that asserts SDK error types |
 | `errors` | `errors.Join(err1, err2)` for compound failures | `internal/resources/l2/vlan.go` (`apply` aborts) |
 | `strings` | `strings.SplitSeq` over `strings.Split` in `for range` | `internal/resources/l2/vlan_interface.go` parser |
-| `bytes` | `Buffer.Peek` for protocol-style readers | reserved for gNMI / CLI parsing |
-| `io` | `io.ReadAll` | already idiomatic; ~2x faster, ~50 % less alloc |
-| `slog` | `NewMultiHandler` | only when adding dual-sink logging |
-| `reflect` | `Type.Fields()` iterators | `cmd/pulumi-eos-gen` only |
-| `os/signal` | `NotifyContext` returning cancel cause | provider `main.run` graceful shutdown |
-| `crypto/sha3` | zero values | reserved |
-| `net/url` | strict-colon parsing default-on | accept; do not set `GODEBUG=urlstrictcolons=0` |
-| `net/http` | `Transport.NewClientConn` | reserved for HTTP/2 fine-tuning |
-| `testing` | `t.ArtifactDir()` | `test/integration/...` for cEOS captures |
+| `errors` | `errors.Join(err1, err2)` for compound failures | `internal/resources/l2/{vlan,vlan_interface,interface,port_channel}.go` |
+| `strings` | `SplitSeq` over `Split` in `for-range` loops | `internal/resources/l2/{interface,port_channel,vlan_interface,switchport}.go` parsers |
+| `os/signal` | `NotifyContext` returning cancel cause | provider entry-point graceful shutdown |
+| `net/url` | strict-colon parsing default-on | `internal/config/clients.go`; `GODEBUG=urlstrictcolons=0` not set |
 
 ## 7. Tooling adopted
 

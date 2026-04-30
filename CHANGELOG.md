@@ -13,6 +13,19 @@ and this project adheres to [Semantic Versioning 2.0.0](https://semver.org/spec/
   `Update` / `Delete` / `Diff`) over eAPI configuration sessions, using
   the `internal/client/eapi.Session` semaphore-protected commit/abort
   primitives. Idempotent re-apply verified.
+- `eos:l2:PortChannel` resource (S5): logical Port-Channel CRUD. Args:
+  `id` (1..2000), `description`, `mtu`, `shutdown`, `switchport*`,
+  `lacpFallback` (`static` / `individual`), `lacpFallbackTimeout`. Shares
+  switchport semantics with `eos:l2:Interface` via `SwitchportFields`.
+  Sources: EOS User Manual §11.2.5, §11.2.5.18.
+- `internal/resources/l2/switchport.go`: shared switchport helpers
+  (`SwitchportFields`, `validateSwitchport`, `buildSwitchportCmds`,
+  `parseSwitchportLine`, `fillSwitchport`) consumed by both `Interface`
+  and `PortChannel`. `interface.go` refactored to use the helpers; tests
+  updated to point at the shared sentinel errors.
+- `internal/resources/device/device.go`: `readFacts` now performs a real
+  `show version` and maps `modelName` / `serialNumber` / `hardwareRevision`
+  / `version` / `systemMacAddress` into the resource state.
 - `eos:l2:Interface` resource (S5): physical (Ethernet) and Management
   interface CRUD. Args: `name` (PK), `description`, `mtu`, `shutdown`,
   `switchportMode` (`access` / `trunk` / `routed` → `no switchport`),
@@ -45,7 +58,6 @@ and this project adheres to [Semantic Versioning 2.0.0](https://semver.org/spec/
 - `cmd/pulumi-resource-eos`: entry point wiring the binary to the
   `pulumi-go-provider` infer framework via `provider.New().Run`. `-version`
   flag plus engine-driven gRPC server.
-- `cmd/pulumi-eos-gen`: SDK / docs / schema generator skeleton.
 - `internal/provider`: provider config (eAPI + CVP planes, secrets,
   retry policy), validation, provider builder with namespace `eos`,
   Apache-2.0 metadata, language map for Go / Python / TypeScript.
@@ -132,6 +144,12 @@ and this project adheres to [Semantic Versioning 2.0.0](https://semver.org/spec/
   sprints; per-gate quality status; open commitments.
 - `LICENSE` (Apache-2.0), `SECURITY.md`, `CONTRIBUTING.md`, `CODEOWNERS`,
   PR template, issue templates.
+
+### Removed
+
+- `cmd/pulumi-eos-gen` placeholder binary. Will be reintroduced as a
+  fully-implemented tool when SDK / schema generation enters the active
+  sprint.
 
 ### Changed
 

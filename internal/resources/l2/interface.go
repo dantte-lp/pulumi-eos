@@ -13,13 +13,6 @@ import (
 	"github.com/dantte-lp/pulumi-eos/internal/config"
 )
 
-// Switchport modes accepted by `eos:l2:Interface`.
-const (
-	SwitchportModeAccess = "access"
-	SwitchportModeTrunk  = "trunk"
-	SwitchportModeRouted = "routed"
-)
-
 // LACP / static channel-group modes.
 const (
 	ChannelGroupModeActive  = "active"
@@ -28,12 +21,12 @@ const (
 )
 
 // Sentinel errors specific to Interface.
+//
+// The switchport-related sentinels (mode invalid, access-vs-trunk conflict)
+// live in switchport.go and are reused here.
 var (
 	ErrInterfaceNameRequired  = errors.New("interface name is required")
-	ErrInterfaceModeInvalid   = errors.New("switchportMode must be access, trunk, or routed")
 	ErrInterfaceCgModeInvalid = errors.New("channelGroup.mode must be active, passive, or on")
-	ErrInterfaceAccessOnTrunk = errors.New("accessVlan is only valid when switchportMode=access")
-	ErrInterfaceTrunkOnAccess = errors.New("trunkAllowedVlans / trunkNativeVlan only valid when switchportMode=trunk")
 )
 
 // ChannelGroup binds the interface to a Port-Channel.
@@ -192,34 +185,9 @@ func validateInterface(args InterfaceArgs) error {
 	if strings.TrimSpace(args.Name) == "" {
 		return ErrInterfaceNameRequired
 	}
-	if args.SwitchportMode != nil {
-		switch *args.SwitchportMode {
-		case "", SwitchportModeAccess, SwitchportModeTrunk, SwitchportModeRouted:
-		default:
-			return fmt.Errorf("%w (got %q)", ErrInterfaceModeInvalid, *args.SwitchportMode)
-		}
-	}
-	mode := ""
-	if args.SwitchportMode != nil {
-		mode = *args.SwitchportMode
-	}
-	if args.AccessVlan != nil {
-		if err := validateVlanID(*args.AccessVlan); err != nil {
-			return err
-		}
-		if mode != "" && mode != SwitchportModeAccess {
-			return ErrInterfaceAccessOnTrunk
-		}
-	}
-	if args.TrunkAllowedVlans != nil || args.TrunkNativeVlan != nil {
-		if mode != "" && mode != SwitchportModeTrunk {
-			return ErrInterfaceTrunkOnAccess
-		}
-	}
-	if args.TrunkNativeVlan != nil {
-		if err := validateVlanID(*args.TrunkNativeVlan); err != nil {
-			return err
-		}
+	sp := args.switchport()
+	if err := validateSwitchport(sp); err != nil {
+		return err
 	}
 	if args.ChannelGroup != nil {
 		switch args.ChannelGroup.Mode {
@@ -232,6 +200,16 @@ func validateInterface(args InterfaceArgs) error {
 		}
 	}
 	return nil
+}
+
+// switchport returns the SwitchportFields view of the args.
+func (a *InterfaceArgs) switchport() SwitchportFields {
+	return SwitchportFields{
+		Mode:              a.SwitchportMode,
+		AccessVlan:        a.AccessVlan,
+		TrunkAllowedVlans: a.TrunkAllowedVlans,
+		TrunkNativeVlan:   a.TrunkNativeVlan,
+	}
 }
 
 func interfaceID(name string) string { return "interface/" + name }
@@ -269,25 +247,8 @@ func buildInterfaceCmds(args InterfaceArgs, reset bool) []string {
 	if args.Mtu != nil && *args.Mtu > 0 {
 		cmds = append(cmds, "mtu "+strconv.Itoa(*args.Mtu))
 	}
-	if args.SwitchportMode != nil {
-		switch *args.SwitchportMode {
-		case SwitchportModeRouted:
-			cmds = append(cmds, "no switchport")
-		case SwitchportModeAccess:
-			cmds = append(cmds, "switchport", "switchport mode access")
-		case SwitchportModeTrunk:
-			cmds = append(cmds, "switchport", "switchport mode trunk")
-		}
-	}
-	if args.AccessVlan != nil {
-		cmds = append(cmds, "switchport access vlan "+strconv.Itoa(*args.AccessVlan))
-	}
-	if args.TrunkAllowedVlans != nil && *args.TrunkAllowedVlans != "" {
-		cmds = append(cmds, "switchport trunk allowed vlan "+*args.TrunkAllowedVlans)
-	}
-	if args.TrunkNativeVlan != nil {
-		cmds = append(cmds, "switchport trunk native vlan "+strconv.Itoa(*args.TrunkNativeVlan))
-	}
+	sp := args.switchport()
+	cmds = append(cmds, buildSwitchportCmds(sp)...)
 	if args.ChannelGroup != nil {
 		cmds = append(cmds,
 			"channel-group "+strconv.Itoa(args.ChannelGroup.Id)+" mode "+args.ChannelGroup.Mode)
@@ -310,16 +271,12 @@ func sanitizeForSession(name string) string {
 
 // interfaceRow is the parsed live state.
 type interfaceRow struct {
-	Description       string
-	Mtu               int
-	Shutdown          bool
-	NoSwitchport      bool
-	SwitchportMode    string
-	AccessVlan        int
-	TrunkAllowedVlans string
-	TrunkNativeVlan   int
-	ChannelGroupID    int
-	ChannelGroupMode  string
+	Description      string
+	Mtu              int
+	Shutdown         bool
+	Switchport       switchportRow
+	ChannelGroupID   int
+	ChannelGroupMode string
 }
 
 // readInterface returns the live interface configuration or (false, nil)
@@ -350,6 +307,9 @@ func parseInterfaceConfig(out, name string) (interfaceRow, bool, error) {
 	row := interfaceRow{}
 	for raw := range strings.SplitSeq(out, "\n") {
 		line := strings.TrimSpace(raw)
+		if parseSwitchportLine(line, &row.Switchport) {
+			continue
+		}
 		switch {
 		case strings.HasPrefix(line, "description "):
 			row.Description = strings.TrimPrefix(line, "description ")
@@ -359,23 +319,6 @@ func parseInterfaceConfig(out, name string) (interfaceRow, bool, error) {
 			}
 		case line == "shutdown":
 			row.Shutdown = true
-		case line == "no switchport":
-			row.NoSwitchport = true
-			row.SwitchportMode = SwitchportModeRouted
-		case line == "switchport mode access":
-			row.SwitchportMode = SwitchportModeAccess
-		case line == "switchport mode trunk":
-			row.SwitchportMode = SwitchportModeTrunk
-		case strings.HasPrefix(line, "switchport access vlan "):
-			if v, err := strconv.Atoi(strings.TrimPrefix(line, "switchport access vlan ")); err == nil {
-				row.AccessVlan = v
-			}
-		case strings.HasPrefix(line, "switchport trunk allowed vlan "):
-			row.TrunkAllowedVlans = strings.TrimPrefix(line, "switchport trunk allowed vlan ")
-		case strings.HasPrefix(line, "switchport trunk native vlan "):
-			if v, err := strconv.Atoi(strings.TrimPrefix(line, "switchport trunk native vlan ")); err == nil {
-				row.TrunkNativeVlan = v
-			}
 		case strings.HasPrefix(line, "channel-group "):
 			parseChannelGroup(line, &row)
 		}
@@ -408,22 +351,12 @@ func (r interfaceRow) fillState(s *InterfaceState) {
 		v := true
 		s.Shutdown = &v
 	}
-	if r.SwitchportMode != "" {
-		v := r.SwitchportMode
-		s.SwitchportMode = &v
-	}
-	if r.AccessVlan > 0 {
-		v := r.AccessVlan
-		s.AccessVlan = &v
-	}
-	if r.TrunkAllowedVlans != "" {
-		v := r.TrunkAllowedVlans
-		s.TrunkAllowedVlans = &v
-	}
-	if r.TrunkNativeVlan > 0 {
-		v := r.TrunkNativeVlan
-		s.TrunkNativeVlan = &v
-	}
+	sp := SwitchportFields{}
+	fillSwitchport(r.Switchport, &sp)
+	s.SwitchportMode = sp.Mode
+	s.AccessVlan = sp.AccessVlan
+	s.TrunkAllowedVlans = sp.TrunkAllowedVlans
+	s.TrunkNativeVlan = sp.TrunkNativeVlan
 	if r.ChannelGroupID > 0 {
 		s.ChannelGroup = &ChannelGroup{Id: r.ChannelGroupID, Mode: r.ChannelGroupMode}
 	}

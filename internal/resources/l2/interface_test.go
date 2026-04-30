@@ -48,17 +48,17 @@ func TestValidateInterface(t *testing.T) {
 		{
 			name:    "bad_switchport_mode",
 			args:    InterfaceArgs{Name: "Ethernet1", SwitchportMode: new("monitor")},
-			wantErr: ErrInterfaceModeInvalid,
+			wantErr: ErrSwitchportModeInvalid,
 		},
 		{
 			name:    "access_vlan_on_trunk",
 			args:    InterfaceArgs{Name: "Ethernet1", SwitchportMode: new(SwitchportModeTrunk), AccessVlan: new(100)},
-			wantErr: ErrInterfaceAccessOnTrunk,
+			wantErr: ErrSwitchportAccessOnTrunk,
 		},
 		{
 			name:    "trunk_field_on_access",
 			args:    InterfaceArgs{Name: "Ethernet1", SwitchportMode: new(SwitchportModeAccess), TrunkAllowedVlans: new("1-100")},
-			wantErr: ErrInterfaceTrunkOnAccess,
+			wantErr: ErrSwitchportTrunkOnAccess,
 		},
 		{
 			name:    "bad_channel_group_mode",
@@ -213,8 +213,8 @@ func TestParseInterfaceConfig(t *testing.T) {
 	if row.Mtu != 9214 {
 		t.Errorf("mtu: got %d", row.Mtu)
 	}
-	if row.AccessVlan != 800 {
-		t.Errorf("access vlan: got %d", row.AccessVlan)
+	if row.Switchport.AccessVlan != 800 {
+		t.Errorf("access vlan: got %d", row.Switchport.AccessVlan)
 	}
 	if row.ChannelGroupID != 10 || row.ChannelGroupMode != "active" {
 		t.Errorf("channel-group: got %d / %q", row.ChannelGroupID, row.ChannelGroupMode)

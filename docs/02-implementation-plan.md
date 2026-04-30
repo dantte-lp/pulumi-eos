@@ -244,8 +244,7 @@ Severity → `error`: `gosec`, `errcheck`, `bodyclose`, `staticcheck`, `forcetyp
 ```text
 pulumi-eos/
 ├── cmd/
-│   ├── pulumi-resource-eos/      # provider binary
-│   └── pulumi-eos-gen/           # SDK / docs / schema generator
+│   └── pulumi-resource-eos/      # provider binary
 ├── internal/
 │   ├── provider/                 # infer wiring + config + secrets
 │   ├── resources/{device,l2,l3,security,management,cvp}/

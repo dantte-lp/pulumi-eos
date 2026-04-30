@@ -21,7 +21,7 @@ LDFLAGS    := -s -w \
 REPORT_DIR := reports
 
 .PHONY: help all up down restart logs shell \
-        build build-provider build-gen build-all \
+        build build-provider build-all \
         test test-v test-run test-integration test-acceptance fuzz coverage coverage-func test-report \
         lint lint-fix lint-md lint-mmd lint-yaml lint-spell lint-docs \
         semgrep vulncheck vulncheck-strict osv-scan osv-scan-strict \
@@ -60,13 +60,10 @@ shell:
 
 all: build test lint lint-docs
 
-build: build-provider build-gen
+build: build-provider
 
 build-provider:
 	$(EXEC) go build -ldflags='$(LDFLAGS)' -o bin/pulumi-resource-eos ./cmd/pulumi-resource-eos
-
-build-gen:
-	$(EXEC) go build -ldflags='$(LDFLAGS)' -o bin/pulumi-eos-gen ./cmd/pulumi-eos-gen
 
 build-all:
 	$(EXEC) bash -c 'set -e; \

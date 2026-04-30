@@ -44,6 +44,7 @@ func New() (provider.Provider, error) {
 			infer.Resource(&l2.Vlan{}),
 			infer.Resource(&l2.VlanInterface{}),
 			infer.Resource(&l2.Interface{}),
+			infer.Resource(&l2.PortChannel{}),
 		).
 		Build()
 }

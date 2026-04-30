@@ -38,7 +38,6 @@ jobs:
             -X github.com/dantte-lp/pulumi-eos/internal/version.BuildDate=${BUILD_DATE}"
           mkdir -p bin
           go build -buildvcs=false -ldflags="${LDFLAGS}" -o bin/pulumi-resource-eos ./cmd/pulumi-resource-eos
-          go build -buildvcs=false -ldflags="${LDFLAGS}" -o bin/pulumi-eos-gen ./cmd/pulumi-eos-gen
 
       - name: Install test tooling
         run: |

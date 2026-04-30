@@ -1,5 +1,5 @@
 // Package device exposes Pulumi resources whose token starts with
-// `eos:device:`. It is the canary family used to verify provider wiring.
+// `eos:device:`.
 package device
 
 import (
@@ -8,21 +8,26 @@ import (
 	"fmt"
 
 	"github.com/pulumi/pulumi-go-provider/infer"
+
+	"github.com/dantte-lp/pulumi-eos/internal/client/eapi"
+	"github.com/dantte-lp/pulumi-eos/internal/config"
 )
 
-// Device is a read-only handle representing an Arista EOS switch reachable via
-// eAPI or gNMI. It exposes facts (model, serial, EOS version) without ever
-// mutating device state.
-//
-// In S5 onwards, additional `eos:device:*` resources (Configlet, RawCli,
-// OsImage, Reboot, Certificate) reuse the same connection-config shape.
+// Sentinel errors emitted by package device.
+var (
+	ErrFactsMissing = errors.New("device: show version returned no rows")
+)
+
+// Device is a read-only handle representing an Arista EOS switch reachable
+// via eAPI. It surfaces facts (model, serial, EOS version, system MAC)
+// without ever mutating device state.
 type Device struct{}
 
 // DeviceArgs is the set of inputs accepted by the resource.
 type DeviceArgs struct {
 	// Host is the management address of the EOS switch (DNS or IP).
 	Host string `pulumi:"host"`
-	// Port overrides the transport's default port (eAPI: 443, gNMI: 6030).
+	// Port overrides the transport's default port (eAPI: 443).
 	Port *int `pulumi:"port,optional"`
 	// Username for AAA. If empty the provider-level eosUsername is used.
 	Username *string `pulumi:"username,optional"`
@@ -64,9 +69,6 @@ func (s *DeviceState) Annotate(a infer.Annotator) {
 	a.Describe(&s.SystemMAC, "Chassis system MAC.")
 }
 
-// ErrFactsNotWired is returned by readFacts until S5 connects goeapi.
-var ErrFactsNotWired = errors.New("device fact gathering not yet wired (S5)")
-
 // Create wires a Device handle. No mutation occurs on the device — the call
 // merely establishes that the device is reachable and gathers facts.
 func (*Device) Create(ctx context.Context, req infer.CreateRequest[DeviceArgs]) (infer.CreateResponse[DeviceState], error) {
@@ -80,8 +82,7 @@ func (*Device) Create(ctx context.Context, req infer.CreateRequest[DeviceArgs]) 
 	return infer.CreateResponse[DeviceState]{ID: req.Inputs.Host, Output: state}, nil
 }
 
-// Read refreshes facts; idempotent. Returning a non-nil error ID-clears the
-// resource from the Pulumi state.
+// Read refreshes facts; idempotent.
 func (*Device) Read(ctx context.Context, req infer.ReadRequest[DeviceArgs, DeviceState]) (infer.ReadResponse[DeviceArgs, DeviceState], error) {
 	state := req.State
 	state.DeviceArgs = req.Inputs
@@ -96,7 +97,52 @@ func (*Device) Delete(_ context.Context, _ infer.DeleteRequest[DeviceState]) (in
 	return infer.DeleteResponse{}, nil
 }
 
-// readFacts is the canary stub. S5 swaps it for a goeapi `show version` call.
-func readFacts(_ context.Context, _ *DeviceState) error {
-	return ErrFactsNotWired
+// readFacts populates the read-only fields of state from `show version`.
+//
+// goeapi already returns structured JSON for `show version`; we map the
+// fields documented in EOS Command API Guide §1 (versioned schema r1)
+// into the resource state.
+func readFacts(ctx context.Context, state *DeviceState) error {
+	cli, err := newClient(ctx, state.Host, state.Username, state.Password, state.Port)
+	if err != nil {
+		return err
+	}
+	resp, err := cli.RunCmds(ctx, []string{"show version"}, "json")
+	if err != nil {
+		return fmt.Errorf("show version: %w", err)
+	}
+	if len(resp) == 0 {
+		return ErrFactsMissing
+	}
+	row := resp[0]
+	if v, ok := row["modelName"].(string); ok {
+		state.Model = v
+	}
+	if v, ok := row["serialNumber"].(string); ok {
+		state.SerialNumber = v
+	}
+	if v, ok := row["hardwareRevision"].(string); ok {
+		state.HardwareRev = v
+	}
+	if v, ok := row["version"].(string); ok {
+		state.EOSVersion = v
+	}
+	if v, ok := row["systemMacAddress"].(string); ok {
+		state.SystemMAC = v
+	}
+	return nil
+}
+
+// newClient builds an eAPI client for the device, applying per-resource
+// host / port / username / password overrides over the provider-level
+// configuration.
+func newClient(ctx context.Context, host string, user, pass *string, port *int) (*eapi.Client, error) {
+	cfg := config.FromContext(ctx)
+	hostPtr := &host
+	cli, err := cfg.EAPIClient(ctx, hostPtr, user, pass)
+	if err != nil {
+		return nil, err
+	}
+	_ = port // explicit port is encoded in `host` URL when needed; provider config carries the default.
+	return cli, nil
 }

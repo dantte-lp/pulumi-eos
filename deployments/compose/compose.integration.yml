@@ -1,0 +1,55 @@
+# compose.integration.yml — Compose Specification stack for pulumi-eos
+# integration tests against a real cEOS Lab instance.
+#
+# The image is imported via:
+#   podman import /opt/software/cEOS64-lab-4.36.0.1F.tar localhost/ceos:4.36.0.1F
+#
+# Run:
+#   make test-integration-up
+#   make test-integration         # one-shot, brings up + tests + tears down
+
+name: pulumi-eos-it
+
+services:
+  ceos:
+    container_name: pulumi-eos-it-ceos
+    image: localhost/ceos:4.36.0.1F
+    hostname: ceos1
+    privileged: true
+    cap_add:
+      - SYS_ADMIN
+      - NET_ADMIN
+    command:
+      - /sbin/init
+      - systemd.setenv=INTFTYPE=eth
+      - systemd.setenv=ETBA=4
+      - systemd.setenv=SKIP_ZEROTOUCH_BARRIER_IN_SYSDBINIT=1
+      - systemd.setenv=CEOS=1
+      - systemd.setenv=EOS_PLATFORM=ceoslab
+      - systemd.setenv=container=docker
+    environment:
+      CEOS: "1"
+      EOS_PLATFORM: "ceoslab"
+      ETBA: "4"
+      SKIP_ZEROTOUCH_BARRIER_IN_SYSDBINIT: "1"
+      INTFTYPE: "eth"
+      container: "docker"
+    # Bound to all host interfaces so the sibling pulumi-eos-dev container can
+    # reach cEOS via `host.containers.internal`. For host-only invocation,
+    # `127.0.0.1:1808x` works equivalently.
+    ports:
+      - "18443:443"   # eAPI HTTPS
+      - "18080:80"    # eAPI HTTP
+      - "18830:6030"  # gNMI
+    healthcheck:
+      test: ["CMD", "/usr/bin/Cli", "-p", "15", "-c", "show version"]
+      interval: 15s
+      timeout: 5s
+      retries: 30
+      start_period: 60s
+
+    # cEOS uses systemd PID 1; mount tmpfs for /run and /tmp to avoid
+    # podman volume permission edge cases.
+    tmpfs:
+      - /run
+      - /tmp

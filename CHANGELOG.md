@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning 2.0.0](https://semver.org/spec/
 
 ## [Unreleased]
 
+### Added (S4+ — cEOS integration stack)
+
+- `deployments/compose/compose.integration.yml`: Compose Specification stack
+  bringing up Arista cEOS Lab 4.36.0.1F (privileged + SYS_ADMIN/NET_ADMIN
+  caps + systemd PID-1) with eAPI ports mapped to localhost (HTTP 18080,
+  HTTPS 18443, gNMI 18830).
+- `scripts/integration-bootstrap.sh`: applies the minimal eAPI bootstrap
+  config (admin user, `management api http-commands`) and waits until eAPI
+  is reachable.
+- `test/integration/eapi_test.go`: build-tag-gated `integration` tests
+  (`show version`, configuration-session abort/release-slot canary).
+- `Makefile`: `test-integration`, `test-integration-up`,
+  `test-integration-down`, `test-integration-logs` targets driven through
+  `podman-compose`.
+
 ### Added (S4 — foundation)
 
 - `cmd/pulumi-resource-eos`: real entry point wiring the binary to the

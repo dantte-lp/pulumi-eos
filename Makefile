@@ -103,8 +103,23 @@ fuzz:
 	@test -n "$(FUNC)" || (echo "Usage: make fuzz FUNC=FuzzX PKG=./internal/x"; exit 1)
 	$(EXEC) go test -fuzz=$(FUNC) $(PKG) -fuzztime=60s
 
+IT_COMPOSE := deployments/compose/compose.integration.yml
+IT_DC      := podman-compose -f $(IT_COMPOSE)
+
 test-integration:
-	$(EXEC) go test -tags integration ./test/integration/... -race -count=1 -v
+	$(MAKE) test-integration-up
+	$(EXEC) env EOS_HOST=host.containers.internal go test -tags integration ./test/integration/... -race -count=1 -v
+	$(MAKE) test-integration-down
+
+test-integration-up:
+	$(IT_DC) up -d
+	bash scripts/integration-bootstrap.sh pulumi-eos-it-ceos
+
+test-integration-down:
+	$(IT_DC) down --volumes --remove-orphans
+
+test-integration-logs:
+	$(IT_DC) logs -f ceos
 
 test-acceptance:
 	$(EXEC) go test -tags acceptance ./test/acceptance/... -count=1 -v

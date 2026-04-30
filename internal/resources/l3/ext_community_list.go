@@ -170,7 +170,7 @@ func (*ExtCommunityList) Delete(ctx context.Context, req infer.DeleteRequest[Ext
 // "standard".
 func extCommunityListType(p *string) string {
 	if p == nil || *p == "" {
-		return "standard"
+		return listTypeStandard
 	}
 	return *p
 }
@@ -180,7 +180,7 @@ func validateExtCommunityList(args ExtCommunityListArgs) error {
 		return ErrExtCommunityListNameRequired
 	}
 	t := extCommunityListType(args.ListType)
-	if t != "standard" && t != "regexp" {
+	if t != listTypeStandard && t != listTypeRegexp {
 		return fmt.Errorf("%w: got %q", ErrExtCommunityListTypeInvalid, t)
 	}
 	if len(args.Entries) == 0 {
@@ -194,7 +194,7 @@ func validateExtCommunityList(args ExtCommunityListArgs) error {
 		if strings.TrimSpace(e.Value) == "" {
 			return ErrExtCommunityListValueEmpty
 		}
-		if t == "standard" {
+		if t == listTypeStandard {
 			if e.Type == nil || *e.Type == "" {
 				return fmt.Errorf("%w: missing type for value %q", ErrExtCommunityListEntryType, e.Value)
 			}
@@ -205,7 +205,7 @@ func validateExtCommunityList(args ExtCommunityListArgs) error {
 				return fmt.Errorf("%w: %q", ErrExtCommunityListStdValue, e.Value)
 			}
 		}
-		if t == "regexp" && e.Type != nil && *e.Type != "" {
+		if t == listTypeRegexp && e.Type != nil && *e.Type != "" {
 			return fmt.Errorf("%w: got type=%q", ErrExtCommunityListRegexpHasTyp, *e.Type)
 		}
 	}
@@ -252,7 +252,7 @@ func buildExtCommunityListCmds(args ExtCommunityListArgs, remove bool) []string 
 	t := extCommunityListType(args.ListType)
 	for _, e := range args.Entries {
 		var line string
-		if t == "regexp" {
+		if t == listTypeRegexp {
 			line = "ip extcommunity-list regexp " + args.Name + " " + e.Action + " " + e.Value
 		} else {
 			line = "ip extcommunity-list " + args.Name + " " + e.Action + " " + *e.Type + " " + e.Value
@@ -289,7 +289,7 @@ func readExtCommunityList(ctx context.Context, cli *eapi.Client, name string) (e
 // parseExtCommunityListLines walks the grepped output and assembles the
 // row matching `name`.
 func parseExtCommunityListLines(out, name string) (extCommunityListRow, bool) {
-	row := extCommunityListRow{Name: name, Type: "standard"}
+	row := extCommunityListRow{Name: name, Type: listTypeStandard}
 	stdPrefix := "ip extcommunity-list " + name + " "
 	regexpPrefix := "ip extcommunity-list regexp " + name + " "
 	found := false
@@ -299,7 +299,7 @@ func parseExtCommunityListLines(out, name string) (extCommunityListRow, bool) {
 		var ok bool
 		isRegexp := false
 		if rest, ok = strings.CutPrefix(line, regexpPrefix); ok {
-			row.Type = "regexp"
+			row.Type = listTypeRegexp
 			isRegexp = true
 		} else if rest, ok = strings.CutPrefix(line, stdPrefix); !ok {
 			continue

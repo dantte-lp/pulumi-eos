@@ -175,7 +175,7 @@ func (*CommunityList) Delete(ctx context.Context, req infer.DeleteRequest[Commun
 // communityListType returns the resolved type, defaulting to "standard".
 func communityListType(p *string) string {
 	if p == nil || *p == "" {
-		return "standard"
+		return listTypeStandard
 	}
 	return *p
 }
@@ -185,7 +185,7 @@ func validateCommunityList(args CommunityListArgs) error {
 		return ErrCommunityListNameRequired
 	}
 	t := communityListType(args.Type)
-	if t != "standard" && t != "regexp" {
+	if t != listTypeStandard && t != listTypeRegexp {
 		return fmt.Errorf("%w: got %q", ErrCommunityListTypeInvalid, t)
 	}
 	if len(args.Entries) == 0 {
@@ -199,7 +199,7 @@ func validateCommunityList(args CommunityListArgs) error {
 		if strings.TrimSpace(e.Value) == "" {
 			return ErrCommunityListValueEmpty
 		}
-		if t == "standard" && !validCommunityStandardValue(e.Value) {
+		if t == listTypeStandard && !validCommunityStandardValue(e.Value) {
 			return fmt.Errorf("%w: %q", ErrCommunityListValueStd, e.Value)
 		}
 	}
@@ -265,7 +265,7 @@ func buildCommunityListCmds(args CommunityListArgs, remove bool) []string {
 	cmds := []string{"no ip community-list " + args.Name}
 	t := communityListType(args.Type)
 	prefix := "ip community-list "
-	if t == "regexp" {
+	if t == listTypeRegexp {
 		prefix = "ip community-list regexp "
 	}
 	for _, e := range args.Entries {
@@ -303,7 +303,7 @@ func readCommunityList(ctx context.Context, cli *eapi.Client, name string) (comm
 // parseCommunityListLines extracts the named list's entries.
 // Exposed for unit tests.
 func parseCommunityListLines(out, name string) (communityListRow, bool) {
-	row := communityListRow{Name: name, Type: "standard"}
+	row := communityListRow{Name: name, Type: listTypeStandard}
 	stdPrefix := "ip community-list " + name + " "
 	regexpPrefix := "ip community-list regexp " + name + " "
 	found := false
@@ -312,7 +312,7 @@ func parseCommunityListLines(out, name string) (communityListRow, bool) {
 		var rest string
 		var ok bool
 		if rest, ok = strings.CutPrefix(line, regexpPrefix); ok {
-			row.Type = "regexp"
+			row.Type = listTypeRegexp
 		} else if rest, ok = strings.CutPrefix(line, stdPrefix); !ok {
 			continue
 		}

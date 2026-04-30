@@ -97,6 +97,8 @@
     "identityprovider",
     "imagestatus",
     "ospf",
+    "ospfv",
+    "nssa",
     "vrfs",
     "vteps",
     "oneline",

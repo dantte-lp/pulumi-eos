@@ -156,17 +156,6 @@ func (c *Client) OpenSession(ctx context.Context, name string) (*Session, error)
 	return &Session{parent: c, name: name, open: true}, nil
 }
 
-// release drains the parent's session semaphore. Idempotent.
-func (s *Session) release() {
-	if s == nil || s.parent == nil {
-		return
-	}
-	select {
-	case <-s.parent.sessionSlot:
-	default:
-	}
-}
-
 // Stage adds configuration commands to the session.
 // Commands are NOT applied to running-config until Commit.
 func (s *Session) Stage(ctx context.Context, cmds []string) error {
@@ -252,4 +241,15 @@ func (s *Session) Abort(ctx context.Context) error {
 		return fmt.Errorf("eapi: abort %s: %w", s.name, err)
 	}
 	return nil
+}
+
+// release drains the parent's session semaphore. Idempotent.
+func (s *Session) release() {
+	if s == nil || s.parent == nil {
+		return
+	}
+	select {
+	case <-s.parent.sessionSlot:
+	default:
+	}
 }

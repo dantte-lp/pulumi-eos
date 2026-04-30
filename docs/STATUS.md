@@ -37,8 +37,8 @@
 | Build | `go build ./...` (Go 1.26.2) | pass |
 | Unit tests + race | `go test -race -count=1 ./...` | pass |
 | Integration | `make test-integration` against cEOS 4.36.0.1F | pass |
-| Go static analysis | `golangci-lint v2.11.4` (allowlist, ~70 linters incl. `gosec`, `protogetter`) | 0 issues |
-| SAST | `semgrep` (`p/golang`, host-side) | clean |
+| Go static analysis | `golangci-lint v2.11.4` (allowlist, **83 linters** incl. `gosec` audit-mode + `forbidigo` + `gomodguard` + `protogetter` + `embeddedstructfieldcheck` + `funcorder` + `goconst` + `godox` + `iotamixing` + `nestif` + `paralleltest`) | 0 issues |
+| SAST | `gosec` embedded in golangci-lint (`severity: low`, `confidence: low`, `audit: true`); `semgrep p/golang` available host-side via `make semgrep` | clean |
 | Vulnerability | `govulncheck v1.2.0` + `osv-scanner v2.3.5` | no vulnerabilities |
 | Markdown | `markdownlint-cli2` | 0 errors |
 | Mermaid | `@mermaid-js/mermaid-cli` (`mmdc`) render | 5 diagrams parsed, 0 failures |

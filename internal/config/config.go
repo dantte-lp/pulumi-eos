@@ -126,20 +126,34 @@ func (c *Config) Configure(_ context.Context) error {
 	return nil
 }
 
-// transport returns the effective transport, falling back to the default.
-func (c *Config) transport() Transport {
-	if c.EOSTransport == nil || *c.EOSTransport == "" {
-		return Transport(defaultTransport)
-	}
-	return Transport(strings.ToLower(*c.EOSTransport))
-}
-
 // SessionPrefix returns the EOS configuration session name prefix.
 func (c *Config) SessionPrefix() string {
 	if c.EOSSessionPrefix == nil || *c.EOSSessionPrefix == "" {
 		return defaultSessionPrefix
 	}
 	return *c.EOSSessionPrefix
+}
+
+// RetryAttempts returns the effective retry-attempt count.
+func (c *Config) RetryAttempts() int {
+	if c.RetryMaxAttempts == nil || *c.RetryMaxAttempts < 1 {
+		return defaultRetryAttempts
+	}
+	return *c.RetryMaxAttempts
+}
+
+// HasEOS reports whether on-box EOS configuration is populated.
+func (c *Config) HasEOS() bool { return c.EOSURL != "" }
+
+// HasCVP reports whether CVP / CVaaS configuration is populated.
+func (c *Config) HasCVP() bool { return c.CVPURL != "" }
+
+// transport returns the effective transport, falling back to the default.
+func (c *Config) transport() Transport {
+	if c.EOSTransport == nil || *c.EOSTransport == "" {
+		return Transport(defaultTransport)
+	}
+	return Transport(strings.ToLower(*c.EOSTransport))
 }
 
 func (c *Config) requestTimeout() (time.Duration, error) {
@@ -162,17 +176,3 @@ func (c *Config) retryMax() (time.Duration, error) {
 	}
 	return time.ParseDuration(*c.RetryMaxDelay)
 }
-
-// RetryAttempts returns the effective retry-attempt count.
-func (c *Config) RetryAttempts() int {
-	if c.RetryMaxAttempts == nil || *c.RetryMaxAttempts < 1 {
-		return defaultRetryAttempts
-	}
-	return *c.RetryMaxAttempts
-}
-
-// HasEOS reports whether on-box EOS configuration is populated.
-func (c *Config) HasEOS() bool { return c.EOSURL != "" }
-
-// HasCVP reports whether CVP / CVaaS configuration is populated.
-func (c *Config) HasCVP() bool { return c.CVPURL != "" }

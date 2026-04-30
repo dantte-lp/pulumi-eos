@@ -39,6 +39,7 @@ linters:
     - forcetypeassert
     - reassign
     - containedctx
+    - forbidigo
 
     # Correctness
     - govet
@@ -61,6 +62,7 @@ linters:
     - asasalint
     - gochecksumtype
     - gochecknoinits
+    - iotamixing
 
     # Error handling
     - errorlint
@@ -86,6 +88,11 @@ linters:
     - interfacebloat
     - inamedparam
     - decorder
+    - embeddedstructfieldcheck
+    - nestif
+    - funcorder
+    - goconst
+    - godox
 
     # Performance
     - prealloc
@@ -116,6 +123,7 @@ linters:
     # Dependencies
     - depguard
     - gomoddirectives
+    - gomodguard
 
     # Discipline
     - nolintlint
@@ -126,12 +134,26 @@ linters:
     - testableexamples
     - usetesting
     - testifylint
+    - paralleltest
 
   settings:
     gosec:
+      # Run every available rule (default empty includes = all).
+      excludes: []
+      severity: low
+      confidence: low
       config:
         global:
+          # Audit mode: report ignored issues; nosec annotations still
+          # honoured but surfaced in the audit log.
           audit: "true"
+          nosec: "true"
+          show-ignored: "true"
+        # Default file-permission expectations on non-test paths.
+        # Tests and bootstrap scripts may relax via `//nolint:gosec`.
+        G301: "0750"
+        G302: "0600"
+        G306: "0600"
     govet:
       enable:
         - shadow
@@ -172,6 +194,52 @@ linters:
     loggercheck:
       require-string-key: true
       no-printf-like: true
+    forbidigo:
+      forbid:
+        - pattern: '^fmt\.Print(|f|ln)$'
+          msg: "Use slog or t.Logf in library code; fmt.Print* is allowed only under cmd/ and scripts/."
+        - pattern: '^print(ln)?$'
+          msg: "Bootstrap-only builtin; use slog instead."
+      exclude-godoc-examples: true
+    goconst:
+      min-len: 4
+      min-occurrences: 5
+      match-constant: true
+      ignore-string-values:
+        # EOS CLI fragments — kept inline so the call site reads as a CLI
+        # transcript rather than a constant lookup.
+        - '^(no |interface |vlan |port-channel |configure session ).*$'
+    godox:
+      keywords:
+        - TODO
+        - FIXME
+        - HACK
+        - XXX
+        - BUG
+        - OPTIMIZE
+    gomodguard:
+      blocked:
+        modules:
+          - github.com/pkg/errors:
+              recommendations:
+                - errors
+                - fmt
+              reason: "Standard library has covered errors.Is / errors.As since Go 1.13."
+          - io/ioutil:
+              recommendations:
+                - io
+                - os
+              reason: "Deprecated in Go 1.16; use io / os equivalents."
+    nestif:
+      min-complexity: 5
+    funcorder:
+      constructor: true
+      struct-method: true
+    paralleltest:
+      ignore-missing: false
+      ignore-missing-subtests: false
+    embeddedstructfieldcheck:
+      forbid-mutex: true
 
   exclusions:
     generated: strict
@@ -189,9 +257,19 @@ linters:
           - maintidx
           - containedctx
           - forcetypeassert
+          - goconst
+          - godox
+          - paralleltest
+          - funcorder
+          - nestif
       - path: cmd/
         linters:
           - gochecknoinits
+          - forbidigo
+      - path: scripts/
+        linters:
+          - forbidigo
+          - depguard
       - path: scripts/vuln-audit.go
         text: "import 'os/exec' is not allowed"
         linters:
@@ -213,4 +291,8 @@ severity:
         - containedctx
         - nilnil
         - reassign
+        - forbidigo
+        - gomodguard
+        - iotamixing
+        - paralleltest
       severity: error

@@ -6,6 +6,7 @@
 |---|---|---|---|
 | Unit | none | `go test -race ./...` | All packages. |
 | Integration | `integration` | `go test -tags integration ./test/integration/...` | cEOS in Containerlab; mocked CVP. |
+| Probe | `integration probe` | `go test -tags="integration probe" -run TestProbe_<X> -v ./test/integration/...` | On-demand surface discovery scripts (`probe_<resource>_test.go`) sharing the integration `newTestClient`. Used to enumerate accepted CLI fragments and verify session idempotency before authoring a resource. Not part of CI; not part of `make verify`. |
 | Acceptance | `acceptance` | `go test -tags acceptance ./test/acceptance/...` | End-to-end Pulumi programs against fixtures. |
 | Matrix | external | Containerlab + GitHub matrix | EOS 4.30 / 4.32 / 4.34 / 4.36 × CVP 2024.3 / 2025.3 / 2026.1. |
 | Soak | external | 24 h continuous apply/refresh | Single-fabric stability. |

@@ -52,7 +52,7 @@ Per-group inventory against `docs/03-resource-catalog.md`:
 
 | Group | Total | Shipped | Pending | % | Sprint span |
 |---|---:|---:|---:|---:|---|
-| `eos:device` | 6 | 2 | 4 | 33% | S4 — S9 |
+| `eos:device` | 6 | 3 | 3 | 50% | S4 — S9 |
 | `eos:l2` | 16 | 10 | 6 | 62% | S5 — post-S9 |
 | `eos:l3` | 16 | 0 | 16 | 0% | S6 — post-S9 |
 | `eos:multicast` | 6 | 0 | 6 | 0% | S7 |
@@ -60,7 +60,7 @@ Per-group inventory against `docs/03-resource-catalog.md`:
 | `eos:qos` | 6 | 0 | 6 | 0% | S7 |
 | `eos:management` | 11 | 0 | 11 | 0% | S7 |
 | `eos:cvp` | 14 | 0 | 14 | 0% | S8 — post-S8 |
-| **Total** | **94** | **12** | **82** | **13%** | — |
+| **Total** | **94** | **13** | **81** | **14%** | — |
 
 ## Priority ordering (2026-04-30)
 
@@ -69,7 +69,7 @@ EVPN/VXLAN fabric.
 
 | Tier | Scope | Resources | Why first |
 |---|---|---|---|
-| **Tier 1 — Close S4 + S5** | ~~`eos:device:Configlet` (S4 lacuna)~~ shipped, `eos:device:RawCli`, `eos:l2:MacAddressTable` (`infer.Function`), minimum gNMI client. | 3 items remaining | Ship the only escape-hatch surface left in the EOS modelling layer; provides a path for users to drive unmodeled features in v0.1 without blocking on S6. |
+| **Tier 1 — Close S4 + S5** | ~~`eos:device:Configlet` (S4 lacuna)~~ shipped, ~~`eos:device:RawCli`~~ shipped, `eos:l2:MacAddressTable` (`infer.Function`), minimum gNMI client. | 2 items remaining | Ship the only escape-hatch surface left in the EOS modelling layer; provides a path for users to drive unmodeled features in v0.1 without blocking on S6. |
 | **Tier 2 — Open S6 (L3 critical path)** | `Loopback` → `Vrf` → `Bfd` → `Interface` (routed) → `StaticRoute` → `RouterBgp` (peer-groups + per-AF + per-VRF + EVPN AF + RD/RT) → `RoutingPolicy` → `Rcf` → `Rpki` → `RouterOspf` → `GreTunnel` → `Vrrp` → `PolicyBasedRouting` → `ResilientEcmp`. | 14 items | `RouterBgp` is the single largest resource in the project; everything from underlay reachability to overlay EVPN flows through it. Sequencing `Loopback`/`Vrf`/`Bfd` first makes BGP reusable across both planes. |
 | **Tier 3a — S7 management bootstrap** | `Hostname`, `ManagementInterface`, `NtpServer`, `DnsServer`, `Logging`, `EApi`. | 6 items | Required day-zero on every device; trivial shape; enables all subsequent S7 work to drive a real device through Pulumi. |
 | **Tier 3b — S7 security core** | `IpAccessList`, `Ipv6AccessList`, `MacAccessList`, `RoleBasedAccessList`, `UserAccount`, `Role`, `AaaServer`, `AaaAuthentication`, `SslProfile`, `ControlPlanePolicing`, `Urpf`, `ServiceAcl`. | 12 items | Control plane and data-plane policy. ACLs are referenced by routing-policy, PBR, and CoPP, so they unlock cross-resource composition. |
@@ -90,7 +90,7 @@ EVPN/VXLAN fabric.
 | `pulumi package gen-sdk` for Go / Python / TypeScript / .NET / Java | S5 exit | — |
 | `v0.1.0-rc.1` tag | S5 exit (after Tier 1 closes) | — |
 | ~~Tier 1 — `eos:device:Configlet`~~ shipped | S4 lacuna | — |
-| Tier 1 — `eos:device:RawCli` | S5 closeout | — |
+| ~~Tier 1 — `eos:device:RawCli`~~ shipped | S5 closeout | — |
 | Tier 1 — `eos:l2:MacAddressTable` (`infer.Function`) | S5 closeout | — |
 | Tier 1 — minimum gNMI client (`internal/client/gnmi/`) | S5 closeout | — |
 
@@ -98,7 +98,8 @@ EVPN/VXLAN fabric.
 
 | Commit | Subject | Date |
 |---|---|---|
-| pending | `feat(device): eos:device:Configlet — atomic raw CLI block via config-session` | 2026-04-30 |
+| pending | `feat(device): eos:device:RawCli — diff-driven idempotent escape hatch` | 2026-04-30 |
+| `be4d732` | `feat(device): eos:device:Configlet — atomic raw CLI block via config-session` | 2026-04-30 |
 | `5fa01a1` | `feat(l2): eos:l2:VlanRange bulk allocation helper` | 2026-04-30 |
 | `726b26c` | `feat(l2): eos:l2:Varp global anycast-gateway MAC` | 2026-04-30 |
 | `2a64a58` | `feat(l2): eos:l2:Stp global spanning-tree configuration` | 2026-04-30 |

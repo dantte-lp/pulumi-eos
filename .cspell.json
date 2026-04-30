@@ -55,6 +55,7 @@
     "cloudvision",
     "configlet",
     "configlets",
+    "rawcli",
     "cosign",
     "cvaas",
     "cvpapi",

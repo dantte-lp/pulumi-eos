@@ -98,7 +98,7 @@ func runGo(args ...string) commandResult {
 	ctx, cancel := context.WithTimeout(context.Background(), scannerTimeout)
 	defer cancel()
 
-	cmd := exec.CommandContext(ctx, "go", args...) //nolint:gosec // controlled args, see scripts/vuln-audit.go
+	cmd := exec.CommandContext(ctx, "go", args...)
 	var stdout, stderr bytes.Buffer
 	cmd.Stdout = &stdout
 	cmd.Stderr = &stderr

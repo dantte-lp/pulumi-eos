@@ -1,16 +1,16 @@
 // Package main is the entry point for the pulumi-eos resource provider plugin.
 //
-// The binary is named pulumi-resource-eos per Pulumi's plugin discovery contract.
-// It is invoked by the Pulumi engine over gRPC and serves resource CRUD requests
-// for Arista EOS devices and CloudVision (CVP / CVaaS) fleets.
+// The binary is named pulumi-resource-eos per Pulumi's plugin discovery
+// contract. It is invoked by the Pulumi engine over gRPC and serves resource
+// CRUD requests for Arista EOS devices and CloudVision (CVP / CVaaS) fleets.
 package main
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"os"
 
+	"github.com/dantte-lp/pulumi-eos/internal/provider"
 	"github.com/dantte-lp/pulumi-eos/internal/version"
 )
 
@@ -23,26 +23,21 @@ func main() {
 	}
 }
 
-// run is the testable entry point.
-//
-// In Sprint 4 (S4) it will be replaced by:
-//
-//	provider, err := internalprovider.New(version.Full())
-//	if err != nil { return err }
-//	return provider.Run(ctx, providerName, version.Version)
-//
-// For now it only handles -version / -schema introspection so the binary is
-// usable in CI smoke tests.
-func run(_ context.Context, args []string) error {
+// run is the testable entry point. It supports a small set of pre-engine
+// inspection flags before handing the binary off to the Pulumi engine over
+// the provider gRPC contract.
+func run(ctx context.Context, args []string) error {
 	if len(args) == 1 {
 		switch args[0] {
 		case "-version", "--version":
 			fmt.Println(version.Full())
 			return nil
-		case "-schema", "--schema":
-			fmt.Println(`{"name":"eos","version":"` + version.Version + `","resources":{}}`)
-			return nil
 		}
 	}
-	return errors.New("provider runtime not yet wired (Sprint S4)")
+
+	p, err := provider.New()
+	if err != nil {
+		return fmt.Errorf("build provider: %w", err)
+	}
+	return p.Run(ctx, providerName, version.Version)
 }

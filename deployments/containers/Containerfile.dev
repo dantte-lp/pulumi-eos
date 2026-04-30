@@ -84,11 +84,13 @@ RUN --mount=type=cache,target=/root/.cache/go-build \
  && go install golang.org/x/perf/cmd/benchstat@latest \
  && go install gotest.tools/gotestsum@latest
 
-# npm-based documentation linters (Markdown / Mermaid / cspell / commitlint).
+# npm-based documentation linters (Markdown / cspell / commitlint).
+# Mermaid render-lint (mmdc) is intentionally NOT installed here: it pulls in a
+# headless Chromium with system libs (libnss3, libxkb, libgbm…) bloating the
+# image. `make lint-mmd` runs mmdc on the host or in the CI lint-docs job.
 RUN --mount=type=cache,target=/root/.npm \
     npm install -g \
         markdownlint-cli2@latest \
-        @mermaid-js/mermaid-cli@latest \
         cspell@latest \
         @commitlint/cli@latest \
         @commitlint/config-conventional@latest
@@ -99,15 +101,6 @@ RUN --mount=type=cache,target=/root/.cache/pip \
         yamllint \
         junit2html \
         "podman==${PODMAN_PY_VERSION}"
-
-# Smoke-test executables.
-RUN go version \
- && pulumi version \
- && golangci-lint version \
- && markdownlint-cli2 --help >/dev/null \
- && mmdc --version \
- && cspell --version \
- && yamllint --version
 
 WORKDIR /app
 VOLUME /app

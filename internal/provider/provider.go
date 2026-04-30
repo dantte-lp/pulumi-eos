@@ -41,6 +41,7 @@ func New() (provider.Provider, error) {
 		WithConfig(infer.Config(&config.Config{})).
 		WithResources(
 			infer.Resource(&device.Device{}),
+			infer.Resource(&device.Configlet{}),
 			infer.Resource(&l2.Vlan{}),
 			infer.Resource(&l2.VlanInterface{}),
 			infer.Resource(&l2.Interface{}),

@@ -20,8 +20,8 @@
 | S1 — Requirements | SRS, risk register, scope | done | `docs/02-implementation-plan.md` §6, §11; `docs/08-research-references.md` |
 | S2 — System design | Component diagram, sequence diagrams, transport matrix | done | `docs/01-architecture.md` |
 | S3 — Detailed design | Resource catalog + field shapes, ADRs | done (catalog), schema gen pending | `docs/03-resource-catalog.md`, `docs/04-provider-config.md` |
-| S4 — Foundation | Provider runtime, eAPI/CVP clients, cEOS integration, CI green | done | commits `f6ae43f`, `0117e8a`, `6565ccd`, `9fa0b40`, `eb6cdc8`, `98daa9c`, `d661199` |
-| S5 — L2 family | `Vlan`, `VlanRange`, `VlanInterface`, `Interface`, `PortChannel`, `EvpnEthernetSegment`, `Mlag`, `VxlanInterface`, `MacAddressTable`, `Varp`, `Stp`; `RawCli` escape; minimum gNMI client | in progress (10/11 core L2 resources shipped) | shipped: `Vlan` (`fa20b40`), `VlanInterface` (`2a77f2e`), `Interface` (`449ea8e`), `PortChannel` + shared `SwitchportFields` (`b516f28`), `VxlanInterface` (`193a4e6`), `EvpnEthernetSegment` (`09dd4f1`), `Mlag` (`b3e2c5d`), `Stp` (`2a64a58`), `Varp` (`726b26c`), `VlanRange` (this commit); 12/12 cEOS integration tests pass; pending: `MacAddressTable` (read-only data source, `infer.Function` form), `RawCli` (escape hatch — `eos:device:`), minimum gNMI client. |
+| S4 — Foundation | Provider runtime, eAPI/CVP clients, cEOS integration, CI green; `eos:device:Configlet` lacuna | done | commits `f6ae43f`, `0117e8a`, `6565ccd`, `9fa0b40`, `eb6cdc8`, `98daa9c`, `d661199`, Configlet (this commit) |
+| S5 — L2 family | `Vlan`, `VlanRange`, `VlanInterface`, `Interface`, `PortChannel`, `EvpnEthernetSegment`, `Mlag`, `VxlanInterface`, `MacAddressTable`, `Varp`, `Stp`; `RawCli` escape; minimum gNMI client | in progress (10/11 core L2 resources shipped) | shipped: `Vlan` (`fa20b40`), `VlanInterface` (`2a77f2e`), `Interface` (`449ea8e`), `PortChannel` + shared `SwitchportFields` (`b516f28`), `VxlanInterface` (`193a4e6`), `EvpnEthernetSegment` (`09dd4f1`), `Mlag` (`b3e2c5d`), `Stp` (`2a64a58`), `Varp` (`726b26c`), `VlanRange` (`5fa01a1`); 13/13 cEOS integration tests pass; pending: `MacAddressTable` (read-only data source, `infer.Function` form), `RawCli` (escape hatch — `eos:device:`), minimum gNMI client. |
 | S6 — L3 family | `Vrf`, `RouterBgp` (peer-groups, EVPN AF), `Bfd`, `Rcf`, `Rpki`, `Vrrp`, `Pbr` | pending | — |
 | S7 — Security / Mgmt / Multicast / QoS | ACLs, AAA, MACsec, DHCP, Igmp / Pim / Msdp, QoS | pending | — |
 | S8 — CloudVision | `Workspace`, `Studio`, `ChangeControl`, `Configlet`, `Tag`, … | pending | — |
@@ -46,18 +46,63 @@
 | Spelling | `cspell` | clean |
 | LSP | `gopls v0.21.1` | references resolve across packages |
 
+## Group readiness
+
+Per-group inventory against `docs/03-resource-catalog.md`:
+
+| Group | Total | Shipped | Pending | % | Sprint span |
+|---|---:|---:|---:|---:|---|
+| `eos:device` | 6 | 2 | 4 | 33% | S4 — S9 |
+| `eos:l2` | 16 | 10 | 6 | 62% | S5 — post-S9 |
+| `eos:l3` | 16 | 0 | 16 | 0% | S6 — post-S9 |
+| `eos:multicast` | 6 | 0 | 6 | 0% | S7 |
+| `eos:security` | 19 (`RouteMap` modeled in `RoutingPolicy`) | 0 | 19 | 0% | S7 |
+| `eos:qos` | 6 | 0 | 6 | 0% | S7 |
+| `eos:management` | 11 | 0 | 11 | 0% | S7 |
+| `eos:cvp` | 14 | 0 | 14 | 0% | S8 — post-S8 |
+| **Total** | **94** | **12** | **82** | **13%** | — |
+
+## Priority ordering (2026-04-30)
+
+Closeout tiers — sequenced for end-to-end deployability of a leaf-spine
+EVPN/VXLAN fabric.
+
+| Tier | Scope | Resources | Why first |
+|---|---|---|---|
+| **Tier 1 — Close S4 + S5** | ~~`eos:device:Configlet` (S4 lacuna)~~ shipped, `eos:device:RawCli`, `eos:l2:MacAddressTable` (`infer.Function`), minimum gNMI client. | 3 items remaining | Ship the only escape-hatch surface left in the EOS modelling layer; provides a path for users to drive unmodeled features in v0.1 without blocking on S6. |
+| **Tier 2 — Open S6 (L3 critical path)** | `Loopback` → `Vrf` → `Bfd` → `Interface` (routed) → `StaticRoute` → `RouterBgp` (peer-groups + per-AF + per-VRF + EVPN AF + RD/RT) → `RoutingPolicy` → `Rcf` → `Rpki` → `RouterOspf` → `GreTunnel` → `Vrrp` → `PolicyBasedRouting` → `ResilientEcmp`. | 14 items | `RouterBgp` is the single largest resource in the project; everything from underlay reachability to overlay EVPN flows through it. Sequencing `Loopback`/`Vrf`/`Bfd` first makes BGP reusable across both planes. |
+| **Tier 3a — S7 management bootstrap** | `Hostname`, `ManagementInterface`, `NtpServer`, `DnsServer`, `Logging`, `EApi`. | 6 items | Required day-zero on every device; trivial shape; enables all subsequent S7 work to drive a real device through Pulumi. |
+| **Tier 3b — S7 security core** | `IpAccessList`, `Ipv6AccessList`, `MacAccessList`, `RoleBasedAccessList`, `UserAccount`, `Role`, `AaaServer`, `AaaAuthentication`, `SslProfile`, `ControlPlanePolicing`, `Urpf`, `ServiceAcl`. | 12 items | Control plane and data-plane policy. ACLs are referenced by routing-policy, PBR, and CoPP, so they unlock cross-resource composition. |
+| **Tier 3c — S7 access-edge (campus)** | `Dot1x`, `Mab`, `Pvlan`, `StormControl`, `DhcpRelay`, `DhcpSnooping`, `DynamicArpInspection`, `IpSourceGuard`, `ArpRateLimit`. | 9 items | Campus / access-layer. Independent of the spine/leaf path. |
+| **Tier 3d — S7 MACsec** | `MacSecProfile`, `MacSecBinding`. | 2 items | DCI / dark-fiber encryption; depends on `Interface` only. |
+| **Tier 3e — S7 multicast** | `Igmp`, `IgmpSnooping`, `Pim`, `AnycastRp`, `Msdp`, `MulticastRoutingTable`. | 6 items | Specialized; ship after security. |
+| **Tier 3f — S7 QoS** | `ClassMap`, `PolicyMap`, `ServicePolicy`, `QosMap`, `PriorityFlowControl`, `BufferProfile`. | 6 items | Specialized; ship last in S7. |
+| **Tier 3g — S7 management extras** | `Snmp`, `Sflow`, `Telemetry`, `EventMonitor`, `PortMirror`. | 5 items | Observability; lower priority than core mgmt. |
+| **Tier 4 — S8 CVP/CVaaS** | `Workspace`, `Studio`, `Configlet`, `ChangeControl`, `Tag`, `Device`, `Inventory`, `ServiceAccount`, `IdentityProvider`, `ImageBundle`, `Compliance`, `Alert`; post-S8: `Dashboard`, `Audit`. | 14 items | Out-of-band orchestration plane; depends on a CVP test instance. |
+| **Tier 5 — S9 Day-2 / gNOI** | `OsImage`, `Reboot`, `Certificate`. | 3 items | Operational lifecycle; gNOI client (separate from gNMI) needed first. |
+| **Tier 6 — post-S9 stretch** | `eos:l3:RouterIsis`, `eos:l3:Nat`, `eos:l2:Cfm`. | 3 items | Specialized / stretch goals; not on the v1.0 critical path. |
+
 ## Open commitments
 
 | Topic | Where | Owner |
 |---|---|---|
-| Generate `schema.json` via `bin/pulumi-resource-eos -schema` | S3 carry-over → S5 entry | — |
-| `pulumi package gen-sdk` for Go / Python / TypeScript / .NET / Java | S5 entry | — |
-| `v0.1.0-rc.1` tag | S5 exit | — |
+| Generate `schema.json` via `bin/pulumi-resource-eos -schema` | S3 carry-over → S5 exit | — |
+| `pulumi package gen-sdk` for Go / Python / TypeScript / .NET / Java | S5 exit | — |
+| `v0.1.0-rc.1` tag | S5 exit (after Tier 1 closes) | — |
+| ~~Tier 1 — `eos:device:Configlet`~~ shipped | S4 lacuna | — |
+| Tier 1 — `eos:device:RawCli` | S5 closeout | — |
+| Tier 1 — `eos:l2:MacAddressTable` (`infer.Function`) | S5 closeout | — |
+| Tier 1 — minimum gNMI client (`internal/client/gnmi/`) | S5 closeout | — |
 
 ## Repository activity
 
 | Commit | Subject | Date |
 |---|---|---|
+| pending | `feat(device): eos:device:Configlet — atomic raw CLI block via config-session` | 2026-04-30 |
+| `5fa01a1` | `feat(l2): eos:l2:VlanRange bulk allocation helper` | 2026-04-30 |
+| `726b26c` | `feat(l2): eos:l2:Varp global anycast-gateway MAC` | 2026-04-30 |
+| `2a64a58` | `feat(l2): eos:l2:Stp global spanning-tree configuration` | 2026-04-30 |
+| `b3e2c5d` | `feat(l2): eos:l2:Mlag singleton + sync STATUS / plan to S5 progress` | 2026-04-30 |
 | `09dd4f1` | `feat(l2): eos:l2:EvpnEthernetSegment for EVPN multi-homing` | 2026-04-30 |
 | `193a4e6` | `feat(l2): eos:l2:VxlanInterface — overlay VTEP with VLAN/VRF→VNI maps` | 2026-04-30 |
 | `3581c37` | `fix(plugin): relocate pulumi-eos-dev to plugins/ and use ./ prefix in source` | 2026-04-30 |

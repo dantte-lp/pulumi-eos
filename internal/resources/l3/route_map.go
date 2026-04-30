@@ -100,16 +100,17 @@ func (m *RouteMapMatch) Annotate(an infer.Annotator) {
 // set metric) and outbound (set as-path prepend / set ip next-hop /
 // set tag / set origin) policy needs.
 type RouteMapSet struct {
-	Community         []string `pulumi:"community,optional"`
-	CommunityAdditive *bool    `pulumi:"communityAdditive,optional"`
-	CommunityNone     *bool    `pulumi:"communityNone,optional"`
-	ExtcommunityRt    []string `pulumi:"extcommunityRt,optional"`
-	LocalPreference   *int     `pulumi:"localPreference,optional"`
-	Metric            *string  `pulumi:"metric,optional"`
-	AsPathPrepend     []int    `pulumi:"asPathPrepend,optional"`
-	IpNextHop         *string  `pulumi:"ipNextHop,optional"`
-	Origin            *string  `pulumi:"origin,optional"`
-	Tag               *int     `pulumi:"tag,optional"`
+	Community              []string `pulumi:"community,optional"`
+	CommunityAdditive      *bool    `pulumi:"communityAdditive,optional"`
+	CommunityNone          *bool    `pulumi:"communityNone,optional"`
+	ExtcommunityRt         []string `pulumi:"extcommunityRt,optional"`
+	ExtcommunityRtAdditive *bool    `pulumi:"extcommunityRtAdditive,optional"`
+	LocalPreference        *int     `pulumi:"localPreference,optional"`
+	Metric                 *string  `pulumi:"metric,optional"`
+	AsPathPrepend          []int    `pulumi:"asPathPrepend,optional"`
+	IpNextHop              *string  `pulumi:"ipNextHop,optional"`
+	Origin                 *string  `pulumi:"origin,optional"`
+	Tag                    *int     `pulumi:"tag,optional"`
 }
 
 // Annotate documents RouteMapSet fields.
@@ -118,6 +119,7 @@ func (s *RouteMapSet) Annotate(an infer.Annotator) {
 	an.Describe(&s.CommunityAdditive, "Append to existing communities rather than replace (`set community ... additive`).")
 	an.Describe(&s.CommunityNone, "`set community none` — strip all communities. Mutually exclusive with `additive`.")
 	an.Describe(&s.ExtcommunityRt, "Ext-community RT values (e.g. \"65000:1\").")
+	an.Describe(&s.ExtcommunityRtAdditive, "When true, append `additive` to every `set extcommunity rt` line so existing route-targets are preserved.")
 	an.Describe(&s.LocalPreference, "`set local-preference <0..>`.")
 	an.Describe(&s.Metric, "`set metric <N>` or signed delta `+N` / `-N`.")
 	an.Describe(&s.AsPathPrepend, "ASNs to prepend (`set as-path prepend ...`); ordered.")
@@ -482,8 +484,13 @@ func routeMapSetCmds(s *RouteMapSet) []string {
 		}
 		cmds = append(cmds, line)
 	}
+	rtAdditive := s.ExtcommunityRtAdditive != nil && *s.ExtcommunityRtAdditive
 	for _, rt := range s.ExtcommunityRt {
-		cmds = append(cmds, "set extcommunity rt "+rt)
+		line := "set extcommunity rt " + rt
+		if rtAdditive {
+			line += " additive"
+		}
+		cmds = append(cmds, line)
 	}
 	if s.IpNextHop != nil && *s.IpNextHop != "" {
 		cmds = append(cmds, "set ip next-hop "+*s.IpNextHop)
@@ -650,7 +657,14 @@ func applyRouteMapSetLine(s *RouteMapSet, payload string) {
 			s.Community = strings.Fields(body)
 		}
 	case strings.HasPrefix(payload, "extcommunity rt "):
-		s.ExtcommunityRt = append(s.ExtcommunityRt, strings.TrimPrefix(payload, "extcommunity rt "))
+		body := strings.TrimPrefix(payload, "extcommunity rt ")
+		if rt, hasAdd := strings.CutSuffix(body, " additive"); hasAdd {
+			s.ExtcommunityRt = append(s.ExtcommunityRt, rt)
+			t := true
+			s.ExtcommunityRtAdditive = &t
+		} else {
+			s.ExtcommunityRt = append(s.ExtcommunityRt, body)
+		}
 	case strings.HasPrefix(payload, "ip next-hop "):
 		v := strings.TrimPrefix(payload, "ip next-hop ")
 		s.IpNextHop = &v

@@ -10,6 +10,7 @@ import (
 	"github.com/dantte-lp/pulumi-eos/internal/config"
 	"github.com/dantte-lp/pulumi-eos/internal/resources/device"
 	"github.com/dantte-lp/pulumi-eos/internal/resources/l2"
+	"github.com/dantte-lp/pulumi-eos/internal/resources/l3"
 )
 
 // Namespace is the Pulumi package namespace registered with the engine.
@@ -53,6 +54,7 @@ func New() (provider.Provider, error) {
 			infer.Resource(&l2.Stp{}),
 			infer.Resource(&l2.Varp{}),
 			infer.Resource(&l2.VlanRange{}),
+			infer.Resource(&l3.Loopback{}),
 		).
 		WithFunctions(
 			infer.Function(&l2.MacAddressTable{}),

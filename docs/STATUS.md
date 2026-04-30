@@ -98,7 +98,7 @@ EVPN/VXLAN fabric.
 
 | Commit | Subject | Date |
 |---|---|---|
-| pending | `feat(l3): eos:l3:Loopback — first S6 / Tier-2 resource` | 2026-04-30 |
+| `5dcc4df` | `feat(l3): eos:l3:Loopback — first S6 / Tier-2 resource` | 2026-04-30 |
 | `8b84e8a` | `docs(plan): bump linter count to 83 + reflect lint hardening` | 2026-04-30 |
 | `0c746ab` | `build(lint): expand golangci-lint to 83 linters; harden gosec settings` | 2026-04-30 |
 | `32f3b1f` | `docs(audit): sync STATUS + plan to actual repo state` | 2026-04-30 |

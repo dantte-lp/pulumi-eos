@@ -9,6 +9,18 @@ and this project adheres to [Semantic Versioning 2.0.0](https://semver.org/spec/
 
 ### Added
 
+- `eos:l3:Rpki` resource (S6, Tier 2 #13, commit `1e93356`): EOS BGP
+  RPKI cache. Composes with `router bgp <asn>` independently of
+  `eos:l3:RouterBgp` — multiple caches per ASN supported (canonical
+  redundant 2-cache pattern from the EOS BGP RPKI Origin Validation
+  Design Guide). Args: `name` + `bgpAsn` (composite PK), `cacheHost`
+  (IPv4-only validator), `vrf`, `port` (1..65535), `preference`
+  (1..10), `refreshInterval`/`retryInterval`/`expireInterval`,
+  `localInterface`, `transport` (`tcp`|`ssh`). Render path emits
+  `rpki cache <name>` block under `router bgp <asn>`. Parser keys
+  rows by ASN+name to avoid cross-matching across `router bgp`
+  blocks. Source: EOS User Manual §32.4 (BGP Origin Validation);
+  TOI 12048.
 - `eos:l3:Rcf` resource (S6, Tier 2 #12, commit `8e02a46` — supersedes
   the v0 `fbdfbb5`): EOS Routing Control Function code unit, the
   programmable alternative to route-maps. Three mutually-exclusive

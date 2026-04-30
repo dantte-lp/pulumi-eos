@@ -14,6 +14,7 @@ services:
   ceos:
     container_name: pulumi-eos-it-ceos
     image: localhost/ceos:4.36.0.1F
+    pull_policy: never
     hostname: ceos1
     privileged: true
     cap_add:

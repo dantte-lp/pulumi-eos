@@ -20,8 +20,8 @@
 | S1 — Requirements | SRS, risk register, scope | done | `docs/02-implementation-plan.md` §6, §11; `docs/08-research-references.md` |
 | S2 — System design | Component diagram, sequence diagrams, transport matrix | done | `docs/01-architecture.md` |
 | S3 — Detailed design | Resource catalog + field shapes, ADRs | done (catalog), schema gen pending | `docs/03-resource-catalog.md`, `docs/04-provider-config.md` |
-| S4 — Foundation | Provider runtime, eAPI/CVP clients, cEOS integration, CI green | done | commits `f6ae43f`, `0117e8a`, `6565ccd`, `9fa0b40`, `eb6cdc8`, `98daa9c` |
-| S5 — L2 family | `Vlan`, `VlanInterface`, `PortChannel`, `EvpnEthernetSegment`, `Mlag`, `VxlanInterface`, `Stp`, … | pending | — |
+| S4 — Foundation | Provider runtime, eAPI/CVP clients, cEOS integration, CI green | done | commits `f6ae43f`, `0117e8a`, `6565ccd`, `9fa0b40`, `eb6cdc8`, `98daa9c`, `d661199` |
+| S5 — L2 family | `Vlan`, `VlanInterface`, `PortChannel`, `EvpnEthernetSegment`, `Mlag`, `VxlanInterface`, `Stp`, … | in progress | `Vlan` shipped (CRUD + Diff + idempotent re-apply over eAPI config-session). |
 | S6 — L3 family | `Vrf`, `RouterBgp` (peer-groups, EVPN AF), `Bfd`, `Rcf`, `Rpki`, `Vrrp`, `Pbr` | pending | — |
 | S7 — Security / Mgmt / Multicast / QoS | ACLs, AAA, MACsec, DHCP, Igmp / Pim / Msdp, QoS | pending | — |
 | S8 — CloudVision | `Workspace`, `Studio`, `ChangeControl`, `Configlet`, `Tag`, … | pending | — |
@@ -58,6 +58,7 @@
 
 | Commit | Subject | Date |
 |---|---|---|
+| `_pending_` | `feat(l2): eos:l2:Vlan resource (CRUD via eAPI config-session)` | 2026-04-30 |
 | `f6ae43f` | `chore(build): bootstrap pulumi-eos repository` | 2026-04-30 |
 | `0117e8a` | `ci(release): add release pipeline, goreleaser, codeowners, issue templates` | 2026-04-30 |
 | `6565ccd` | `feat(provider): wire pulumi-go-provider runtime, eAPI/CVP clients, device canary` | 2026-04-30 |

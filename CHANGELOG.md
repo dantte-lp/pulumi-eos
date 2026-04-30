@@ -9,6 +9,18 @@ and this project adheres to [Semantic Versioning 2.0.0](https://semver.org/spec/
 
 ### Added
 
+- `eos:l2:Vlan` resource (S5): full CRUD lifecycle (`Create` / `Read` /
+  `Update` / `Delete` / `Diff`) over eAPI configuration sessions, using
+  the `internal/client/eapi.Session` semaphore-protected commit/abort
+  primitives. Idempotent re-apply verified.
+- `internal/resources/l2/vlan_test.go` unit tests: vlan-id range guard
+  (1..4094), `buildVlanCmds` table tests, id-formatter sanity.
+- `test/integration/vlan_test.go` build-tagged integration test:
+  end-to-end Create → Read → Update → idempotent re-apply → Delete →
+  Read-after-delete against cEOS 4.36.0.1F.
+- `internal/config` package: extracted `Config`, `Annotate`, `Configure`,
+  and the `EAPIClient` factory out of `internal/provider` so resource
+  packages can derive clients without an import cycle.
 - Repository scaffold: project layout (`golang-standards/project-layout`),
   Makefile, dev container, Compose Specification dev stack.
 - `cmd/pulumi-resource-eos`: entry point wiring the binary to the
@@ -99,5 +111,11 @@ and this project adheres to [Semantic Versioning 2.0.0](https://semver.org/spec/
   from the dev container — Chromium-deps bloat. `make lint-mmd` runs mmdc
   on the host or in CI's `lint-docs` job.
 - `.cspell.json`: ~80 networking-domain words added to the dictionary.
+- `deployments/compose/compose.integration.yml`: `pull_policy: never` on
+  the cEOS service to keep podman-compose from treating `localhost/` as a
+  registry hostname.
+- `internal/provider`: now contains only the inferred-provider
+  entry-point; `Config` and client factories moved to `internal/config` to
+  break the resource → provider import cycle.
 
 [Unreleased]: https://github.com/dantte-lp/pulumi-eos/compare/HEAD...HEAD

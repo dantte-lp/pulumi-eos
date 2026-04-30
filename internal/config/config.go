@@ -1,7 +1,8 @@
-// Package provider builds the pulumi-eos provider via the pulumi-go-provider
-// infer framework. It owns provider-level configuration, client factories,
-// and resource registration.
-package provider
+// Package config holds the pulumi-eos provider-level configuration type and
+// client factories. It is consumed both by `internal/provider` (which builds
+// the inferred provider) and by every `internal/resources/<area>` package
+// (which retrieves the active config via FromContext).
+package config
 
 import (
 	"context"

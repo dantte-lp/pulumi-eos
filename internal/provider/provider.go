@@ -1,10 +1,15 @@
+// Package provider builds the pulumi-eos provider via the pulumi-go-provider
+// infer framework. It owns the inferred provider entry point and the resource
+// registry. Provider-level configuration lives in internal/config.
 package provider
 
 import (
 	provider "github.com/pulumi/pulumi-go-provider"
 	"github.com/pulumi/pulumi-go-provider/infer"
 
+	"github.com/dantte-lp/pulumi-eos/internal/config"
 	"github.com/dantte-lp/pulumi-eos/internal/resources/device"
+	"github.com/dantte-lp/pulumi-eos/internal/resources/l2"
 )
 
 // Namespace is the Pulumi package namespace registered with the engine.
@@ -33,9 +38,10 @@ func New() (provider.Provider, error) {
 				"packageName": "pulumi_eos",
 			},
 		}).
-		WithConfig(infer.Config(&Config{})).
+		WithConfig(infer.Config(&config.Config{})).
 		WithResources(
 			infer.Resource(&device.Device{}),
+			infer.Resource(&l2.Vlan{}),
 		).
 		Build()
 }

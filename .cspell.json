@@ -110,6 +110,7 @@
     "portfast",
     "BPDU",
     "canonicalises",
+    "normalises",
     "serviceaccount",
     "softwaremanagement",
     "autonumber",

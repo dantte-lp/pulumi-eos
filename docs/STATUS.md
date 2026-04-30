@@ -70,7 +70,7 @@ EVPN/VXLAN fabric.
 | Tier | Scope | Resources | Why first |
 |---|---|---|---|
 | ~~**Tier 1 — Close S4 + S5**~~ | ~~`eos:device:Configlet`~~, ~~`eos:device:RawCli`~~, ~~`eos:l2:MacAddressTable`~~, ~~minimum gNMI client~~ — all shipped. | 0 items | Tier 1 closed; v0.1.0-rc.1 unblocked. |
-| **Tier 2 — Open S6 (L3 critical path)** | ~~`Loopback`~~ → ~~`Vrf`~~ → ~~`Bfd`~~ → ~~`Subinterface`~~ → ~~`StaticRoute`~~ → ~~`RouterBgp`~~ (v0) → ~~`PrefixList`~~ → ~~`RouteMap`~~ → ~~`CommunityList`~~ → ~~`ExtCommunityList`~~ → ~~`AsPathAccessList`~~ → ~~`Rcf`~~ (v0 file-reference) → `Rpki` → `RouterOspf` → `GreTunnel` → `Vrrp` → `PolicyBasedRouting` → `ResilientEcmp`. | 6 items remaining | Rcf v0 references pre-staged source files via `code [unit X] source pulled-from <storage:path>`. Inline RCF body deferred to S9 (eAPI sessions parse staged lines as configure-mode CLI; pushing raw RCF text needs gNOI File transfer). |
+| **Tier 2 — Open S6 (L3 critical path)** | ~~`Loopback`~~ → ~~`Vrf`~~ → ~~`Bfd`~~ → ~~`Subinterface`~~ → ~~`StaticRoute`~~ → ~~`RouterBgp`~~ (v0) → ~~`PrefixList`~~ → ~~`RouteMap`~~ → ~~`CommunityList`~~ → ~~`ExtCommunityList`~~ → ~~`AsPathAccessList`~~ → ~~`Rcf`~~ **v1** → `Rpki` → `RouterOspf` → `GreTunnel` → `Vrrp` → `PolicyBasedRouting` → `ResilientEcmp`. | 6 items remaining | Rcf v1 ships three delivery modes: inline `Code` (Pulumi-native via the new eAPI rich-command path with `input` field per Command API Guide §1.2.3 + TOI 19238); `SourceFile` (pre-staged on flash); `SourceUrl` (`pull replace <url>`). New foundational primitive: `eapi.Client.RunCmdsRich` + `Session.StageRich` — unblocks any future resource that needs the eAPI `input` escape hatch (banner, comment, on-box config-replace). |
 | **Tier 3a — S7 management bootstrap** | `Hostname`, `ManagementInterface`, `NtpServer`, `DnsServer`, `Logging`, `EApi`. | 6 items | Required day-zero on every device; trivial shape; enables all subsequent S7 work to drive a real device through Pulumi. |
 | **Tier 3b — S7 security core** | `IpAccessList`, `Ipv6AccessList`, `MacAccessList`, `RoleBasedAccessList`, `UserAccount`, `Role`, `AaaServer`, `AaaAuthentication`, `SslProfile`, `ControlPlanePolicing`, `Urpf`, `ServiceAcl`. | 12 items | Control plane and data-plane policy. ACLs are referenced by routing-policy, PBR, and CoPP, so they unlock cross-resource composition. |
 | **Tier 3c — S7 access-edge (campus)** | `Dot1x`, `Mab`, `Pvlan`, `StormControl`, `DhcpRelay`, `DhcpSnooping`, `DynamicArpInspection`, `IpSourceGuard`, `ArpRateLimit`. | 9 items | Campus / access-layer. Independent of the spine/leaf path. |
@@ -98,12 +98,13 @@ EVPN/VXLAN fabric.
 | Audit gap — `eos:l3:RouteMap` `match rpki invalid\|valid\|not-found` | follow `eos:l3:Rpki` (Tier 2 #13) | — |
 | Audit gap — `eos:l3:RouteMap` `match ip address access-list` | follow `eos:security:IpAccessList` (S7) | — |
 | Audit gap — `eos:l3:RouterBgp` v1 surface (per-PG route-map / rcf / password / local-as / default-originate; per-AF redistribute / network; per-VRF neighbors) | S6 closeout — driven by leaf-spine demo coverage gaps | — |
-| Audit gap — `eos:l3:Rcf` inline-code body (today only file-reference) | follows gNOI File transfer (S9) — eAPI sessions cannot stage raw RCF source | — |
+| ~~Audit gap — `eos:l3:Rcf` inline-code body~~ closed | RCF v1 — three delivery modes (Code / SourceFile / SourceUrl) | — |
 
 ## Repository activity
 
 | Commit | Subject | Date |
 |---|---|---|
+| pending | `feat(l3): Rcf v1 — inline Code via eAPI rich-command + SourceFile + SourceUrl; eapi.Session.StageRich primitive` | 2026-05-01 |
 | `fbdfbb5` | `feat(l3): eos:l3:Rcf v0 — file-reference RCF unit (inline-code deferred to S9)` | 2026-05-01 |
 | `72c7db5` | `feat(l3): close audit gap — RouteMap set extcommunity rt additive flag` | 2026-05-01 |
 | `888a110` | `feat(l3): eos:l3:AsPathAccessList — closes RoutingPolicy 5/5 decomposition` | 2026-05-01 |

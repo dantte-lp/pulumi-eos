@@ -8,9 +8,13 @@
 package eapi
 
 import (
+	"bytes"
 	"context"
+	"crypto/tls"
+	"encoding/json"
 	"errors"
 	"fmt"
+	"net/http"
 	"time"
 
 	"github.com/aristanetworks/goeapi"
@@ -27,6 +31,7 @@ const DefaultCommitTimer = 5 * time.Minute
 
 // Sentinel errors returned by package eapi.
 var (
+	ErrRichRPCFailure      = errors.New("eapi: rich runCmds RPC failure")
 	ErrHostRequired        = errors.New("eapi: host is required")
 	ErrUsernameRequired    = errors.New("eapi: username is required")
 	ErrClientNotInit       = errors.New("eapi: client not initialised")
@@ -118,6 +123,96 @@ func (c *Client) RunCmds(ctx context.Context, cmds []string, format string) ([]m
 	return out, nil
 }
 
+// Command is the rich form of an eAPI CLI command. When `Input` is
+// non-empty the entry is JSON-marshaled as an object with the shape
+// `{"cmd": <Cmd>, "input": <Input>}`; this is the documented escape
+// hatch for commands that accept multi-line stdin (e.g. `banner motd`,
+// `code unit X` for inline RCF source).
+//
+// Source: EOS Command API Guide §1.2.3 — Command Specification.
+type Command struct {
+	Cmd   string
+	Input string
+}
+
+// RunCmdsRich executes a mix of plain (string) and rich (Cmd + Input)
+// commands by crafting the JSON-RPC request directly. goeapi v1.0.0
+// does not expose the `input` field on `Node.RunCommands`; this
+// helper bypasses goeapi for the cases that need it. The HTTP call
+// inherits the host / port / username / password / timeout / TLS
+// posture from the existing Client config.
+func (c *Client) RunCmdsRich(ctx context.Context, cmds []Command, format string) ([]map[string]any, error) {
+	if c == nil {
+		return nil, ErrClientNotInit
+	}
+	if format == "" {
+		format = "json"
+	}
+	if err := ctx.Err(); err != nil {
+		return nil, err
+	}
+	bodyBytes, err := buildRichPayload(cmds, format)
+	if err != nil {
+		return nil, err
+	}
+	rpc, err := c.postEAPI(ctx, bodyBytes)
+	if err != nil {
+		return nil, err
+	}
+	if rpc.Error != nil {
+		return nil, fmt.Errorf("%w: code %d: %s", ErrRichRPCFailure, rpc.Error.Code, rpc.Error.Message)
+	}
+	// Drop the `enable` slot to match RunCmds' shape.
+	if len(rpc.Result) > 0 {
+		return rpc.Result[1:], nil
+	}
+	return rpc.Result, nil
+}
+
+// richRPCResponse mirrors the JSON-RPC envelope returned by the eAPI
+// command endpoint.
+type richRPCResponse struct {
+	Result []map[string]any `json:"result"`
+	Error  *struct {
+		Code    int    `json:"code"`
+		Message string `json:"message"`
+		Data    []any  `json:"data"`
+	} `json:"error"`
+}
+
+// buildRichPayload marshals a runCmds request mixing plain strings
+// and `{cmd, input}` objects. `enable` is prepended to mirror
+// goeapi.Node.RunCommands behaviour.
+func buildRichPayload(cmds []Command, format string) ([]byte, error) {
+	payloadCmds := make([]any, 0, len(cmds)+1)
+	payloadCmds = append(payloadCmds, "enable")
+	for _, cmd := range cmds {
+		if cmd.Input == "" {
+			payloadCmds = append(payloadCmds, cmd.Cmd)
+			continue
+		}
+		payloadCmds = append(payloadCmds, map[string]string{
+			"cmd":   cmd.Cmd,
+			"input": cmd.Input,
+		})
+	}
+	body := map[string]any{
+		"jsonrpc": "2.0",
+		"method":  "runCmds",
+		"params": map[string]any{
+			"version": 1,
+			"cmds":    payloadCmds,
+			"format":  format,
+		},
+		"id": "1",
+	}
+	out, err := json.Marshal(body)
+	if err != nil {
+		return nil, fmt.Errorf("eapi: marshal rich payload: %w", err)
+	}
+	return out, nil
+}
+
 // Session is a named EOS configuration session that wraps a sequence of
 // configuration commands inside an atomic `configure session …` block.
 //
@@ -156,6 +251,52 @@ func (c *Client) OpenSession(ctx context.Context, name string) (*Session, error)
 	return &Session{parent: c, name: name, open: true}, nil
 }
 
+// postEAPI POSTs the JSON-RPC body to the eAPI command endpoint and
+// decodes the envelope.
+func (c *Client) postEAPI(ctx context.Context, body []byte) (richRPCResponse, error) {
+	scheme := "http"
+	if c.cfg.UseHTTPS {
+		scheme = "https"
+	}
+	port := c.cfg.Port
+	if port == 0 {
+		port = DefaultPort
+	}
+	url := fmt.Sprintf("%s://%s:%d/command-api", scheme, c.cfg.Host, port)
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, url, bytes.NewReader(body))
+	if err != nil {
+		return richRPCResponse{}, fmt.Errorf("eapi: build rich request: %w", err)
+	}
+	req.Header.Set("Content-Type", "application/json")
+	req.SetBasicAuth(c.cfg.Username, c.cfg.Password)
+
+	timeout := c.cfg.Timeout
+	if timeout == 0 {
+		timeout = 30 * time.Second
+	}
+	httpCli := &http.Client{
+		Timeout: timeout,
+		Transport: &http.Transport{
+			TLSClientConfig: &tls.Config{
+				MinVersion:         tls.VersionTLS12,
+				InsecureSkipVerify: !c.cfg.UseHTTPS, //nolint:gosec // mirrors goeapi: HTTPS skips verify only when the caller opted in.
+			},
+		},
+	}
+	resp, err := httpCli.Do(req)
+	if err != nil {
+		return richRPCResponse{}, fmt.Errorf("eapi: rich request: %w", err)
+	}
+	defer func() { _ = resp.Body.Close() }() //nolint:gosec // best-effort cleanup; close errors on read-only response are not actionable.
+
+	var rpc richRPCResponse
+	if decodeErr := json.NewDecoder(resp.Body).Decode(&rpc); decodeErr != nil {
+		return richRPCResponse{}, fmt.Errorf("eapi: decode rich response: %w", decodeErr)
+	}
+	return rpc, nil
+}
+
 // Stage adds configuration commands to the session.
 // Commands are NOT applied to running-config until Commit.
 func (s *Session) Stage(ctx context.Context, cmds []string) error {
@@ -168,6 +309,29 @@ func (s *Session) Stage(ctx context.Context, cmds []string) error {
 	staged = append(staged, "end")
 	if _, err := s.parent.RunCmds(ctx, staged, "json"); err != nil {
 		return fmt.Errorf("eapi: stage in %s: %w", s.name, err)
+	}
+	return nil
+}
+
+// StageRich is the rich-command counterpart of Stage. Callers pass a
+// mix of plain (`Cmd`) and complex (`Cmd` + `Input`) commands; the
+// `configure session <name>` wrapper and `end` terminator are added
+// automatically.
+//
+// Use this for resources whose CLI surface needs the eAPI `input`
+// field — currently `eos:l3:Rcf` for inline RCF source, but the same
+// helper unblocks future `banner motd`, `comment`, `ip extcommunity-
+// list … config-replace` consumers.
+func (s *Session) StageRich(ctx context.Context, cmds []Command) error {
+	if !s.open {
+		return ErrSessionClosed
+	}
+	staged := make([]Command, 0, len(cmds)+2)
+	staged = append(staged, Command{Cmd: "configure session " + s.name})
+	staged = append(staged, cmds...)
+	staged = append(staged, Command{Cmd: "end"})
+	if _, err := s.parent.RunCmdsRich(ctx, staged, "json"); err != nil {
+		return fmt.Errorf("eapi: stage rich in %s: %w", s.name, err)
 	}
 	return nil
 }

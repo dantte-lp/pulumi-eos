@@ -55,6 +55,7 @@ func New() (provider.Provider, error) {
 			infer.Resource(&l2.Varp{}),
 			infer.Resource(&l2.VlanRange{}),
 			infer.Resource(&l3.Loopback{}),
+			infer.Resource(&l3.Vrf{}),
 		).
 		WithFunctions(
 			infer.Function(&l2.MacAddressTable{}),

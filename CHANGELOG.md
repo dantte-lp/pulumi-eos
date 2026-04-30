@@ -13,6 +13,14 @@ and this project adheres to [Semantic Versioning 2.0.0](https://semver.org/spec/
   `Update` / `Delete` / `Diff`) over eAPI configuration sessions, using
   the `internal/client/eapi.Session` semaphore-protected commit/abort
   primitives. Idempotent re-apply verified.
+- `eos:l2:Interface` resource (S5): physical (Ethernet) and Management
+  interface CRUD. Args: `name` (PK), `description`, `mtu`, `shutdown`,
+  `switchportMode` (`access` / `trunk` / `routed` → `no switchport`),
+  `accessVlan`, `trunkAllowedVlans`, `trunkNativeVlan`, nested
+  `channelGroup` (id + LACP `mode`). Mutually-exclusive validation
+  enforced (access / trunk fields cross-checked against mode). Delete
+  resets to defaults via `default interface <name>` since physical
+  interfaces persist in hardware.
 - `eos:l2:VlanInterface` resource (S5): SVI / `interface VlanN`. Args:
   `vlanId`, `vrf`, `ipAddress` (regular), `ipAddressVirtual` (anycast,
   mutually exclusive with `ipAddress`), `mtu`, `description`,

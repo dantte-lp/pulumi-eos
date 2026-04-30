@@ -43,6 +43,7 @@ func New() (provider.Provider, error) {
 			infer.Resource(&device.Device{}),
 			infer.Resource(&l2.Vlan{}),
 			infer.Resource(&l2.VlanInterface{}),
+			infer.Resource(&l2.Interface{}),
 		).
 		Build()
 }

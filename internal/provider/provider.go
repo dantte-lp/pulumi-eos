@@ -62,6 +62,7 @@ func New() (provider.Provider, error) {
 			infer.Resource(&l3.RouterBgp{}),
 			infer.Resource(&l3.PrefixList{}),
 			infer.Resource(&l3.RouteMap{}),
+			infer.Resource(&l3.CommunityList{}),
 		).
 		WithFunctions(
 			infer.Function(&l2.MacAddressTable{}),

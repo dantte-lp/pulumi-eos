@@ -272,6 +272,8 @@
     "localpref",
     "sourceproto",
     "eigrp",
+    "GSHUT",
+    "AANN",
     "trivy",
     "unparam",
     "vlan",

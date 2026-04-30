@@ -209,6 +209,11 @@ linters:
         # EOS CLI fragments — kept inline so the call site reads as a CLI
         # transcript rather than a constant lookup.
         - '^(no |interface |vlan |port-channel |configure session ).*$'
+        # Action keywords — `permit` / `deny` recur across community-list,
+        # prefix-list, route-map etc. without being a real shared constant
+        # (each EOS CLI surface treats them independently). Inline reads
+        # cleaner than a package-wide bool / enum.
+        - '^(permit|deny)$'
     godox:
       keywords:
         - TODO

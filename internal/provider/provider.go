@@ -60,6 +60,7 @@ func New() (provider.Provider, error) {
 			infer.Resource(&l3.Subinterface{}),
 			infer.Resource(&l3.StaticRoute{}),
 			infer.Resource(&l3.RouterBgp{}),
+			infer.Resource(&l3.PrefixList{}),
 		).
 		WithFunctions(
 			infer.Function(&l2.MacAddressTable{}),

@@ -56,7 +56,11 @@ Sources:
 | `RouterOspf` | eAPI · config session | S6 | per-VRF instance, area, network, BFD, MD5 authentication, redistribution. |
 | `RouterIsis` | eAPI · config session | post-S9 | Stretch goal; same shape as OSPF. |
 | `Bfd` | eAPI · config session | S6 | Global `bfd` on/off, per-interface `bfd interval N min-rx N multiplier N`, per-peer `fall-over bfd`. |
-| `RoutingPolicy` | eAPI · config session | S6 | `route-map`, `prefix-list`, `community-list`, `extcommunity-list regexp`, `as-path access-list`, with full match/set vocabulary (see **§ Routing-policy match/set**). |
+| `PrefixList` | eAPI · config session | S6 | IPv4 prefix-list with per-list `seq <n> {permit\|deny} <cidr> [eq M \| ge M [le L] \| le L]` entries, optional `remark`. Composable with RouteMap and BGP per-peer-group filters. |
+| `RouteMap` | eAPI · config session | S6 | route-map with sequenced match/set clauses; consumes PrefixList / community-list / as-path; full match/set vocabulary per **§ Routing-policy match/set**. |
+| `CommunityList` | eAPI · config session | S6 | `ip community-list standard\|expanded` with permit/deny entries. |
+| `ExtCommunityList` | eAPI · config session | S6 | `ip extcommunity-list standard\|expanded` with `rt`/`soo`/regex entries. |
+| `AsPathAccessList` | eAPI · config session | S6 | `ip as-path access-list <name> permit\|deny <regex>`. |
 | `Rcf` | eAPI · config session | S6 | `router general / control-functions / code begin / function f() { … } / code end`; constraint: per peer-group either `route-map` OR `rcf`, not both (TOI 15099). |
 | `Rpki` | eAPI · config session | S6 | `rpki cache <ip>`, transport `tcp port`, `preference`, `refresh`; `match rpki invalid\|valid\|not-found` in routing-policy. |
 | `GreTunnel` | eAPI · config session | S6 | `interface TunnelN`, `mtu 1476`, `tunnel mode gre`, `tunnel source`, `tunnel destination`, `tunnel path-mtu-discovery`. Caveats per platform. |

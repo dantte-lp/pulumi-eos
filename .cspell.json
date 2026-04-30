@@ -265,6 +265,7 @@
     "distinguisher",
     "rbgp",
     "redist",
+    "pfxlist",
     "trivy",
     "unparam",
     "vlan",

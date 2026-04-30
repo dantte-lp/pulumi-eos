@@ -7,7 +7,7 @@
   "plugins": [
     {
       "name": "pulumi-eos-dev",
-      "source": ".claude/plugins/pulumi-eos-dev",
+      "source": "./plugins/pulumi-eos-dev",
       "description": "cEOS lifecycle skills, integration test runner, quality gates, resource scaffolding, arista-mcp ground-truth check.",
       "version": "0.1.0"
     }

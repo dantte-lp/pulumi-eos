@@ -98,7 +98,7 @@ EVPN/VXLAN fabric.
 
 | Commit | Subject | Date |
 |---|---|---|
-| pending | `feat(l3): eos:l3:RouteMap with full match/set vocabulary` | 2026-04-30 |
+| `d50fc2a` | `feat(l3): eos:l3:RouteMap with full match/set vocabulary` | 2026-04-30 |
 | `cabe86c` | `build(verify): close 7-standards audit — Keep-a-Changelog + commitlint scopes + containers.conf` | 2026-04-30 |
 | `11a4cd6` | `feat(l3): eos:l3:PrefixList; decompose catalog RoutingPolicy → 5 atomic resources` | 2026-04-30 |
 | `1574102` | `feat(l3): eos:l3:RouterBgp v0 — globals + peer-groups + neighbors + AF + per-VRF RD/RT` | 2026-04-30 |

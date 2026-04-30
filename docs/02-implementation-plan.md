@@ -158,6 +158,8 @@ sequenceDiagram
 | SBOM | `syft` | release |
 | Supply chain | OpenSSF Scorecard, CodeQL Go, Dependabot | scheduled |
 | Tests | `gotestsum` + `junit2html` | `make test-report` · CI |
+| Pre-commit gate | `make verify` (= `all` + `test-integration-keep`) | every resource-touching commit per `docs/05-development.md` "Mandatory per-resource verification rules" |
+| Live cEOS round-trip | `make test-integration-keep` (eAPI + gNMI Capabilities against cEOS 4.36.0.1F) | inside `make verify`; CI runs the full bring-up/tear-down `test-integration` variant |
 
 Severity → `error`: `gosec`, `errcheck`, `bodyclose`, `noctx`, `staticcheck`, `forcetypeassert`, `containedctx`, `nilnil`, `reassign`, `forbidigo`, `gomodguard`, `iotamixing`, `paralleltest`. All others → `warning`. No merge with unresolved `error`-tier findings.
 

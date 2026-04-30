@@ -10,6 +10,19 @@
 | Matrix | external | Containerlab + GitHub matrix | EOS 4.30 / 4.32 / 4.34 / 4.36 × CVP 2024.3 / 2025.3 / 2026.1. |
 | Soak | external | 24 h continuous apply/refresh | Single-fabric stability. |
 
+## Pre-commit gate
+
+`make verify` chains the Unit + Integration layers plus all Go and doc
+linters, against a kept-running cEOS 4.36.0.1F container. It is the
+mandatory pre-commit gate documented in
+[`docs/05-development.md`](05-development.md#mandatory-per-resource-verification-rules):
+
+| Step | Command | Source of truth |
+|---|---|---|
+| Build + race tests | `make test` | Go test runner inside `pulumi-eos-dev`. |
+| Static + style | `make lint` (83 linters) + `make lint-docs` | golangci-lint v2.11.4 + markdownlint + cspell + yamllint + mermaid render. |
+| Live cEOS round-trip | `make test-integration-keep` | `pulumi-eos-it-ceos` container; bring-up via `scripts/integration-bootstrap.sh`. |
+
 ## Coverage
 
 | Quality gate | Threshold |

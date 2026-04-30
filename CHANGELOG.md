@@ -271,9 +271,10 @@ and this project adheres to [Semantic Versioning 2.0.0](https://semver.org/spec/
     `PortChannel`, `EvpnEthernetSegment`, `Mlag`, `VxlanInterface`,
     `MacAddressTable`, `Varp`, `Stp`, `Dot1x`, `Mab`, `Pvlan`, `Cfm`,
     `StormControl`.
-  - `eos:l3` — `Loopback`, `Vrf`, `Interface`, `StaticRoute`,
+  - `eos:l3` — `Loopback`, `Vrf`, `Subinterface`, `StaticRoute`,
     `RouterBgp` (peer-groups, per-AF, per-VRF, RD/RT, RCF), `RouterOspf`,
-    `RouterIsis`, `Bfd`, `RoutingPolicy`, `Rcf`, `Rpki`, `GreTunnel`,
+    `RouterIsis`, `Bfd`, `PrefixList`, `RouteMap`, `CommunityList`,
+    `ExtCommunityList`, `AsPathAccessList`, `Rcf`, `Rpki`, `GreTunnel`,
     `Vrrp`, `PolicyBasedRouting`, `Nat`, `ResilientEcmp`.
   - `eos:multicast` — `Igmp`, `IgmpSnooping`, `Pim`, `AnycastRp`, `Msdp`,
     `MulticastRoutingTable`.

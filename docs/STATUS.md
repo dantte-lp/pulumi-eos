@@ -95,10 +95,12 @@ EVPN/VXLAN fabric.
 | ~~Tier 1 — minimum gNMI client (`internal/client/gnmi/`)~~ shipped | S5 closeout | — |
 | Audit gap — `eos:l2:Interface` per-port BFD timers | S6 closeout (catalog `Bfd` row) | — |
 | ~~Audit gap — `eos:l3:RouteMap` `set extcommunity rt <rt> additive` flag~~ shipped | commit `72c7db5` | — |
-| Audit gap — `eos:l3:RouteMap` `match rpki invalid\|valid\|not-found` | follow `eos:l3:Rpki` (Tier 2 #13) | — |
+| Audit gap — `eos:l3:RouteMap` `match rpki invalid\|valid\|not-found` (now unblocked by `eos:l3:Rpki`) | RouteMap v1 follow-up — track with RouterBgp v1 surface | — |
 | Audit gap — `eos:l3:RouteMap` `match ip address access-list` | follow `eos:security:IpAccessList` (S7) | — |
 | Audit gap — `eos:l3:RouterBgp` v1 surface (per-PG route-map / rcf / password / local-as / default-originate; per-AF redistribute / network; per-VRF neighbors) | S6 closeout — driven by leaf-spine demo coverage gaps | — |
 | ~~Audit gap — `eos:l3:Rcf` inline-code body~~ closed | RCF v1 — three delivery modes (Code / SourceFile / SourceUrl) | — |
+| ~~Audit gap — `eos:device:Device` had no unit/integration tests~~ closed (this commit) | Tests added: `internal/resources/device/device_test.go` + `test/integration/device_test.go` | — |
+| Audit gap — golangci-lint v2.11.4 cloud vs local divergence (goconst on `community_list` / `ext_community_list`) | Closed by `c69195d` — `listType` constants extracted to `internal/resources/l3/types.go` | — |
 
 ## Repository activity
 

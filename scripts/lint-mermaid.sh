@@ -16,11 +16,27 @@ TMP="$(mktemp -d)"
 trap 'rm -rf "$TMP"' EXIT
 
 # Puppeteer launches headless Chromium. Running as root inside containers and
-# the GitHub Actions runners requires --no-sandbox.
+# the GitHub Actions runners requires --no-sandbox. We also pin the Chrome
+# binary explicitly when one is found in the puppeteer cache, since mmdc's
+# bundled puppeteer-core occasionally drifts ahead of the installed Chrome
+# build and refuses to launch the older bundled binary.
 PUPPETEER_CFG="$TMP/puppeteer.json"
-cat > "$PUPPETEER_CFG" <<'EOF'
-{ "args": ["--no-sandbox", "--disable-setuid-sandbox"] }
-EOF
+CHROME_BIN=""
+for path in \
+    "$(find "${HOME:-/root}/.cache/puppeteer/chrome" -name chrome -executable -path '*/chrome-linux64/*' 2>/dev/null | sort | tail -1)" \
+    "$(command -v chromium-browser 2>/dev/null || true)" \
+    "$(command -v google-chrome 2>/dev/null || true)" \
+    "$(command -v chromium 2>/dev/null || true)"; do
+  if [ -n "$path" ] && [ -x "$path" ]; then
+    CHROME_BIN="$path"; break
+  fi
+done
+if [ -n "$CHROME_BIN" ]; then
+  printf '{"executablePath":"%s","args":["--no-sandbox","--disable-setuid-sandbox"]}\n' \
+    "$CHROME_BIN" > "$PUPPETEER_CFG"
+else
+  printf '{"args":["--no-sandbox","--disable-setuid-sandbox"]}\n' > "$PUPPETEER_CFG"
+fi
 
 mapfile -t MD_FILES < <(find "$ROOT" \
   -type d \( -name node_modules -o -name vendor -o -name sdk -o -name reports -o -name dist -o -name .git -o -name .worktrees \) -prune -o \

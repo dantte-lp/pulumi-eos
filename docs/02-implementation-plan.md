@@ -98,14 +98,18 @@ flowchart LR
 
 ### 3.2 Resources (initial coverage)
 
+Aligned with the [EOS Supported Features Matrix 4.35.0F](https://www.arista.com/en/support/product-documentation/supported-features) and Uzum production design (`um-docs`). Detailed shape per resource lives in `docs/03-resource-catalog.md`.
+
 | Module | Resources |
 |---|---|
 | `eos:device` | `Device`, `Configlet`, `RawCli`, `OsImage`, `Reboot`, `Certificate` |
-| `eos:l2` | `Vlan`, `VlanInterface`, `PortChannel`, `Mlag`, `VxlanInterface` |
-| `eos:l3` | `Interface`, `Vrf`, `RouterBgp`, `RouterOspf` |
-| `eos:security` | `Acl`, `RouteMap`, `UserAccount`, `SslProfile` |
-| `eos:management` | `NtpServer`, `DnsServer`, `Logging`, `AaaServer` |
-| `eos:cvp` | `Workspace`, `Studio`, `Configlet`, `ChangeControl`, `Tag`, `Device`, `Inventory`, `ServiceAccount` |
+| `eos:l2` | `Vlan`, `VlanRange`, `VlanInterface`, `Interface`, `PortChannel`, `EvpnEthernetSegment`, `Mlag`, `VxlanInterface`, `MacAddressTable`, `Varp`, `Stp`, `Dot1x`, `Mab`, `Pvlan`, `Cfm`, `StormControl` |
+| `eos:l3` | `Loopback`, `Vrf`, `Interface`, `StaticRoute`, `RouterBgp`, `RouterOspf`, `RouterIsis`, `Bfd`, `RoutingPolicy`, `Rcf`, `Rpki`, `GreTunnel`, `Vrrp`, `PolicyBasedRouting`, `Nat`, `ResilientEcmp` |
+| `eos:multicast` | `Igmp`, `IgmpSnooping`, `Pim`, `AnycastRp`, `Msdp`, `MulticastRoutingTable` |
+| `eos:security` | `IpAccessList`, `Ipv6AccessList`, `MacAccessList`, `RoleBasedAccessList`, `UserAccount`, `Role`, `AaaServer`, `AaaAuthentication`, `SslProfile`, `MacSecProfile`, `MacSecBinding`, `ControlPlanePolicing`, `Urpf`, `DhcpRelay`, `DhcpSnooping`, `DynamicArpInspection`, `IpSourceGuard`, `ServiceAcl`, `ArpRateLimit` |
+| `eos:qos` | `ClassMap`, `PolicyMap`, `ServicePolicy`, `QosMap`, `PriorityFlowControl`, `BufferProfile` |
+| `eos:management` | `ManagementInterface`, `Hostname`, `NtpServer`, `DnsServer`, `Logging`, `Snmp`, `Sflow`, `Telemetry`, `EApi`, `EventMonitor`, `PortMirror` |
+| `eos:cvp` | `Workspace`, `Studio`, `Configlet`, `ChangeControl`, `Tag`, `Device`, `Inventory`, `ServiceAccount`, `IdentityProvider`, `ImageBundle`, `Compliance`, `Alert` |
 
 ### 3.3 Apply flow
 
@@ -176,11 +180,11 @@ Severity → `error`: `gosec`, `errcheck`, `bodyclose`, `staticcheck`, `forcetyp
 
 | # | Scope | Exit |
 |---|---|---|
-| **S4** | Repo bootstrap, `cmd/pulumi-resource-eos`, provider config, eAPI client, CVP client, CI green, release dry-run. | `pulumi up` against cEOS lab works; `v0.1.0-rc.1` tagged. |
-| **S5** | L2 family: `Vlan`, `VlanInterface`, `PortChannel`, `Mlag`; `RawCli` escape; minimum gNMI client. | All L2 resources pass unit + integration; SDK gen-sdk produces 5 SDKs. |
-| **S6** | L3 family: `Interface`, `Vrf`, `RouterOspf`, `RouterBgp` (neighbours, peer-groups, AFs). | Leaf-spine demo (2 leaves + 1 spine) deploys end-to-end. |
-| **S7** | Security & management: `Acl`, `RouteMap`, `UserAccount`, `NtpServer`, `DnsServer`, `Logging`, `SslProfile`, `AaaServer`. | Management plane covered; AAA / RBAC documented. |
-| **S8** | CloudVision: `Workspace`, `Studio`, `Configlet`, `ChangeControl`, `Tag`, `Device`, `Inventory`, `ServiceAccount`. | CVP demo: import fabric → roll change via Workspace + Change Control. |
+| **S4** | Repo bootstrap, `cmd/pulumi-resource-eos`, provider config, eAPI client, CVP client, cEOS integration test stack, CI green, release dry-run. | `pulumi up` against cEOS lab works; `v0.1.0-rc.1` tagged. **Done — commits f6ae43f → 98daa9c.** |
+| **S5** | L2 core: `Vlan`, `VlanRange`, `VlanInterface`, `Interface`, `PortChannel`, `EvpnEthernetSegment`, `Mlag`, `VxlanInterface`, `MacAddressTable`, `Varp`, `Stp`; `RawCli` escape; minimum gNMI client. | All L2 resources pass unit + integration; SDK gen-sdk produces 5 SDKs. |
+| **S6** | L3 family: `Loopback`, `Vrf`, `Interface`, `StaticRoute`, `RouterBgp` (peer-groups, per-AF, per-VRF, RD/RT, RCF), `RouterOspf`, `Bfd`, `RoutingPolicy`, `Rcf`, `Rpki`, `GreTunnel`, `Vrrp`, `PolicyBasedRouting`, `ResilientEcmp`. | Leaf-spine demo (2 leaves + 1 spine, EVPN A-A) deploys end-to-end against cEOS. |
+| **S7** | Security & management & multicast: `IpAccessList`, `Ipv6AccessList`, `MacAccessList`, `RoleBasedAccessList`, `UserAccount`, `Role`, `AaaServer`, `AaaAuthentication`, `SslProfile`, `MacSecProfile`, `MacSecBinding`, `ControlPlanePolicing`, `Urpf`, `DhcpRelay`, `DhcpSnooping`, `DynamicArpInspection`, `IpSourceGuard`, `ServiceAcl`, `ArpRateLimit`, `Dot1x`, `Mab`, `Pvlan`, `StormControl`, `Igmp`, `IgmpSnooping`, `Pim`, `AnycastRp`, `Msdp`, all `eos:management:*`, all `eos:qos:*`. | Management, security, multicast, QoS planes covered; AAA / RBAC documented. |
+| **S8** | CloudVision: `Workspace`, `Studio`, `Configlet`, `ChangeControl`, `Tag`, `Device`, `Inventory`, `ServiceAccount`, `IdentityProvider`, `ImageBundle`, `Compliance`, `Alert`. | CVP demo: import fabric → roll change via Workspace + Change Control. |
 | **S9** | Day-2 / gNOI / drift: `OsImage`, `Reboot`, `Certificate`; gNMI `Subscribe(last-configuration-timestamp)` drift; `pulumi refresh` accuracy report. | Day-2 covered; refresh diff ≡ `show running-config` diff under randomized perturbation. |
 
 ### Phase 4 — Verification

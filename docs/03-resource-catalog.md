@@ -38,6 +38,12 @@ Sources:
 | `VxlanInterface` | eAPI · config session | S5 | `Vxlan1`, `vxlan source-interface Loopback1`, `vxlan udp-port 4789`, `vxlan vlan {id} vni {vni}`, `vxlan vrf {vrf} vni {l3vni}`, optional `vxlan qos dscp propagation encapsulation`. |
 | `MacAddressTable` | eAPI · `show mac address-table` | S5 | Read-only data source. |
 | `Varp` | eAPI · config session | S5 | Global `ip virtual-router mac-address H.H.H` per fabric. |
+| `Stp` | eAPI · config session | S5 | `spanning-tree mode mstp\|rapid-pvst\|none`, `mst configuration`, `bpduguard default`, `portfast`, root-guard. |
+| `Dot1x` | eAPI · config session | S7 | `dot1x system-auth-control`, per-interface `dot1x port-control auto`, `dot1x reauthentication`, RADIUS server reference. |
+| `Mab` | eAPI · config session | S7 | MAC-Based Authentication; per-interface `dot1x mac based authentication`. |
+| `Pvlan` | eAPI · config session | S7 | Private VLAN: primary, isolated, community VLAN associations; per-port mode (host/promiscuous). |
+| `Cfm` | eAPI · config session | post-S9 | Connectivity Fault Management (IEEE 802.1ag); MEPs, MIPs, level. Stretch goal. |
+| `StormControl` | eAPI · config session | S7 | per-interface `storm-control broadcast\|multicast\|unknown-unicast level <pct>`. |
 
 ## `eos:l3`
 
@@ -55,6 +61,10 @@ Sources:
 | `Rcf` | eAPI · config session | S6 | `router general / control-functions / code begin / function f() { … } / code end`; constraint: per peer-group either `route-map` OR `rcf`, not both (TOI 15099). |
 | `Rpki` | eAPI · config session | S6 | `rpki cache <ip>`, transport `tcp port`, `preference`, `refresh`; `match rpki invalid\|valid\|not-found` in routing-policy. |
 | `GreTunnel` | eAPI · config session | S6 | `interface TunnelN`, `mtu 1476`, `tunnel mode gre`, `tunnel source`, `tunnel destination`, `tunnel path-mtu-discovery`. Caveats per platform. |
+| `Vrrp` | eAPI · config session | S6 | per-SVI `vrrp <id> ip <vip>`, `priority`, `preempt`, `track interface`, `authentication`. Alternative to VARP for non-EVPN. |
+| `PolicyBasedRouting` | eAPI · config session | S6 | `policy-map type pbr`, `match ip access-group`, `set nexthop <ip>\|recursive`, `service-policy type pbr input` per interface. |
+| `Nat` | eAPI · config session | post-S9 | Source / Destination NAT, multicast NAT. Trident-3 supported; Jericho2 limited. Stretch goal. |
+| `ResilientEcmp` | eAPI · config session | S6 | `ip hardware fib resilient-hash` profile binding; per-VRF or per-prefix-list scope. |
 
 ### BGP shape
 
@@ -129,6 +139,17 @@ Required field shapes, not always default:
 - `set tag N`,
 - `continue [seq N]`.
 
+## `eos:multicast`
+
+| Resource | Transport | Sprint | Key fields |
+|---|---|---|---|
+| `Igmp` | eAPI · config session | S7 | per-interface `ip igmp version {1\|2\|3}`, `ip igmp query-interval`, `ip igmp last-member-query-interval`, `ip igmp static-group`. |
+| `IgmpSnooping` | eAPI · config session | S7 | global / per-VLAN `ip igmp snooping`, `mrouter`, `report flooding`, `querier`, `proxy`. |
+| `Pim` | eAPI · config session | S7 | per-interface `pim ipv4 sparse-mode`, `pim ipv4 dr-priority`, `pim ipv4 hello-interval`, `pim ipv4 join-prune-interval`. PIM-SM / PIM-SSM / PIM-BiDir profiles. |
+| `AnycastRp` | eAPI · config session | S7 | `ip pim anycast-rp <rp> <self>` (RFC 4610), MSDP peering disabled inside the same RP set. |
+| `Msdp` | eAPI · config session | S7 | `ip msdp peer <addr> connect-source LoopbackN`, `mesh-group`, `originator-id`, SA-filters via prefix-list. |
+| `MulticastRoutingTable` | eAPI · `show ip mroute` / gNMI | S7 | Read-only data source. |
+
 ## `eos:security`
 
 | Resource | Transport | Sprint | Key fields |
@@ -147,6 +168,12 @@ Required field shapes, not always default:
 | `MacSecBinding` | eAPI · config session | S7 | per-interface `mac security profile NAME`; bound to `Interface` via dependency. |
 | `ControlPlanePolicing` | eAPI · config session | S7 | `policy-map type copp`, classes, rates. |
 | `Urpf` | eAPI · config session | S7 | per-interface `ip verify unicast source reachable-via rx\|any` (strict / loose). |
+| `DhcpRelay` | eAPI · config session | S7 | per-SVI `ip helper-address <server> [vrf X] [source-interface Y]`. |
+| `DhcpSnooping` | eAPI · config session | S7 | global / per-VLAN `ip dhcp snooping`, `trust` per uplink, `information option circuit-id format string`. |
+| `DynamicArpInspection` | eAPI · config session | S7 | global / per-VLAN `ip arp inspection`, `trust` per uplink; relies on `DhcpSnooping` binding table. |
+| `IpSourceGuard` | eAPI · config session | S7 | per-interface `ip verify source` (binds to DHCP snooping table). |
+| `ServiceAcl` | eAPI · config session | S7 | `management api http-commands` ingress restrictions; `ip access-class <name>` on `management ssh`, `management http`. |
+| `ArpRateLimit` | eAPI · config session | S7 | per-interface `arp inspection rate <pps>`, drop-on-burst. |
 
 ## `eos:qos`
 

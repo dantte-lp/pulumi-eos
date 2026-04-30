@@ -119,6 +119,10 @@ jobs:
           npm install -g markdownlint-cli2@latest @mermaid-js/mermaid-cli@latest cspell@latest
           pip install --user yamllint
 
+      - name: Install Chrome for puppeteer (mermaid render)
+        run: |
+          cd "$(npm root -g)/@mermaid-js/mermaid-cli" && npx --yes puppeteer browsers install chrome
+
       - name: markdownlint
         run: markdownlint-cli2 "**/*.md" "#node_modules" "#vendor" "#sdk" "#reports" "#dist"
 

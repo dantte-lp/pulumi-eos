@@ -2,6 +2,7 @@
 
 | File | Topic |
 |---|---|
+| [`STATUS.md`](STATUS.md) | Live progress dashboard against the implementation plan. |
 | [`01-architecture.md`](01-architecture.md) | Provider architecture, transport layers, state model. |
 | [`02-implementation-plan.md`](02-implementation-plan.md) | Waterfall plan; 12 sprints; phase gates. |
 | [`03-resource-catalog.md`](03-resource-catalog.md) | Resource list + per-resource design references. |

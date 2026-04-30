@@ -7,84 +7,97 @@ and this project adheres to [Semantic Versioning 2.0.0](https://semver.org/spec/
 
 ## [Unreleased]
 
-### Changed
+### Added
 
-- `docs/03-resource-catalog.md`: rebuilt to cover the EOS surface required
-  by a production EVPN/VXLAN multi-site fabric. New families:
-  `eos:l2:{Vlan, VlanRange, VlanInterface, Interface, PortChannel,
-  EvpnEthernetSegment, Mlag, VxlanInterface, MacAddressTable, Varp}`,
-  `eos:l3:{Loopback, Vrf, Interface, StaticRoute, RouterBgp, RouterOspf,
-  RouterIsis, Bfd, RoutingPolicy, Rcf, Rpki, GreTunnel}`,
-  `eos:security:{IpAccessList, Ipv6AccessList, MacAccessList,
-  RoleBasedAccessList, RouteMap, UserAccount, Role, AaaServer,
-  AaaAuthentication, SslProfile, MacSecProfile, MacSecBinding,
-  ControlPlanePolicing, Urpf}`,
-  `eos:qos:{ClassMap, PolicyMap, ServicePolicy, QosMap,
-  PriorityFlowControl, BufferProfile}`,
-  `eos:management:{ManagementInterface, Hostname, NtpServer, DnsServer,
-  Logging, Snmp, Sflow, Telemetry, EApi, EventMonitor, PortMirror}`. BGP
-  shape spelled out (peer-groups, per-AF, per-VRF, RD/RT formats with
-  separate `rt_admin_asn`). Routing-policy match/set vocabulary spelled
-  out. Per-platform feature constraints table added (Trident-3 EVPN
-  Gateway / L2 DCI gaps; 7050X3 GRE caveats; FPR-4115 ECMP zone limit).
-  Default values table (BFD timers, BGP keepalive/hold-time,
-  maximum-routes, MTU stack, MACsec). Resource dependency graph as
-  Mermaid.
-- `.cspell.json`: ~50 networking-domain words added to the dictionary.
-
-### Added (S4+ — cEOS integration stack)
-
-- `deployments/compose/compose.integration.yml`: Compose Specification stack
-  bringing up Arista cEOS Lab 4.36.0.1F (privileged + SYS_ADMIN/NET_ADMIN
-  caps + systemd PID-1) with eAPI ports mapped to localhost (HTTP 18080,
-  HTTPS 18443, gNMI 18830).
+- Repository scaffold: project layout (`golang-standards/project-layout`),
+  Makefile, dev container, Compose Specification dev stack.
+- `cmd/pulumi-resource-eos`: entry point wiring the binary to the
+  `pulumi-go-provider` infer framework via `provider.New().Run`. `-version`
+  flag plus engine-driven gRPC server.
+- `cmd/pulumi-eos-gen`: SDK / docs / schema generator skeleton.
+- `internal/provider`: provider config (eAPI + CVP planes, secrets,
+  retry policy), validation, provider builder with namespace `eos`,
+  Apache-2.0 metadata, language map for Go / Python / TypeScript.
+- `internal/client/eapi`: goeapi-backed client with named configuration
+  sessions, channel-based 1-slot semaphore, `commit timer`
+  confirmed-commit, `Diff`, and `Abort`.
+- `internal/client/cvp`: gRPC client with bearer-token credentials, TLS 1.3
+  minimum, optional CA pinning via PEM bundle.
+- `internal/resources/device`: `eos:device:Device` canary resource
+  (read-only facts; real `readFacts` lands in S5).
+- `internal/version` package, ldflags-injected.
+- `pkg/eos` public-types placeholder.
+- `go.mod`: `github.com/aristanetworks/goeapi v1.0.0`,
+  `github.com/pulumi/pulumi-go-provider v1.3.2`,
+  `github.com/pulumi/pulumi/sdk/v3 v3.232.0`,
+  `google.golang.org/grpc v1.80.0`. Go 1.26.2.
+- `deployments/compose/compose.integration.yml`: Compose Specification
+  stack bringing up Arista cEOS Lab 4.36.0.1F (privileged +
+  SYS_ADMIN/NET_ADMIN caps + systemd PID-1); eAPI ports 18443/18080/18830.
 - `scripts/integration-bootstrap.sh`: applies the minimal eAPI bootstrap
   config (admin user, `management api http-commands`) and waits until eAPI
   is reachable.
 - `test/integration/eapi_test.go`: build-tag-gated `integration` tests
-  (`show version`, configuration-session abort/release-slot canary).
+  (`show version`, configuration-session abort and release-slot canary).
 - `Makefile`: `test-integration`, `test-integration-up`,
-  `test-integration-down`, `test-integration-logs` targets driven through
-  `podman-compose`.
-
-### Added (S4 — foundation)
-
-- `cmd/pulumi-resource-eos`: real entry point wiring the binary to the
-  `pulumi-go-provider` infer framework via `provider.New().Run`.
-- `internal/provider`: provider config (eAPI + CVP planes, secrets, retry
-  policy), validation, and provider builder with namespace `eos`,
-  Apache-2.0 metadata, language map for Go / Python / TypeScript.
-- `internal/client/eapi`: goeapi-backed client with named configuration
-  sessions, channel-based 1-slot semaphore, `commit timer` confirmed-commit,
-  `Diff`, and `Abort`.
-- `internal/client/cvp`: gRPC client with bearer-token credentials, TLS-1.3
-  minimum, optional CA pinning via PEM bundle.
-- `internal/resources/device`: `eos:device:Device` canary resource (read-only
-  facts; `readFacts` stub lands real implementation in S5).
-- `go.mod`: `github.com/aristanetworks/goeapi v1.0.0`,
-  `github.com/pulumi/pulumi-go-provider v1.3.2`,
-  `github.com/pulumi/pulumi/sdk/v3 v3.232.0`, `google.golang.org/grpc v1.80.0`,
-  Go 1.26.2.
+  `test-integration-down`, `test-integration-logs`.
+- `golangci-lint v2.11.4` configuration: allowlist mode, severity-tiered,
+  ~70 linters enabled.
+- `markdownlint-cli2`, Mermaid render-lint, `yamllint`, `cspell`,
+  `commitlint` configurations and helpers.
+- Podman + podman-compose + podman-py automation in
+  `scripts/automation/build.py`.
+- Vulnerability audit (`govulncheck` + `osv-scanner`) with allowlist
+  support.
+- CI workflows: `ci.yml` (build · test · lint-go · lint-docs · vulncheck
+  · trivy · commitlint), `security.yml` (CodeQL · gosec · weekly
+  schedule), `scorecard.yml`, `release.yml`.
+- `goreleaser` configuration for cross-platform binaries, SBOM (syft),
+  checksum, cosign signing.
+- Dependabot configuration for `gomod`, `github-actions`, `docker`, `pip`.
+- Documentation set: architecture, implementation plan (waterfall ·
+  12 sprints · 6 phases), resource catalog, provider configuration
+  schema preview, development workflow, testing matrix, release process,
+  research references, status dashboard.
+- `docs/03-resource-catalog.md`: resource families per the EOS Supported
+  Features Matrix 4.35.0F:
+  - `eos:device` — `Device`, `Configlet`, `RawCli`, `OsImage`, `Reboot`,
+    `Certificate`.
+  - `eos:l2` — `Vlan`, `VlanRange`, `VlanInterface`, `Interface`,
+    `PortChannel`, `EvpnEthernetSegment`, `Mlag`, `VxlanInterface`,
+    `MacAddressTable`, `Varp`, `Stp`, `Dot1x`, `Mab`, `Pvlan`, `Cfm`,
+    `StormControl`.
+  - `eos:l3` — `Loopback`, `Vrf`, `Interface`, `StaticRoute`,
+    `RouterBgp` (peer-groups, per-AF, per-VRF, RD/RT, RCF), `RouterOspf`,
+    `RouterIsis`, `Bfd`, `RoutingPolicy`, `Rcf`, `Rpki`, `GreTunnel`,
+    `Vrrp`, `PolicyBasedRouting`, `Nat`, `ResilientEcmp`.
+  - `eos:multicast` — `Igmp`, `IgmpSnooping`, `Pim`, `AnycastRp`, `Msdp`,
+    `MulticastRoutingTable`.
+  - `eos:security` — `IpAccessList`, `Ipv6AccessList`, `MacAccessList`,
+    `RoleBasedAccessList`, `UserAccount`, `Role`, `AaaServer`,
+    `AaaAuthentication`, `SslProfile`, `MacSecProfile`, `MacSecBinding`,
+    `ControlPlanePolicing`, `Urpf`, `DhcpRelay`, `DhcpSnooping`,
+    `DynamicArpInspection`, `IpSourceGuard`, `ServiceAcl`, `ArpRateLimit`.
+  - `eos:qos` — `ClassMap`, `PolicyMap`, `ServicePolicy`, `QosMap`,
+    `PriorityFlowControl`, `BufferProfile`.
+  - `eos:management` — `ManagementInterface`, `Hostname`, `NtpServer`,
+    `DnsServer`, `Logging`, `Snmp`, `Sflow`, `Telemetry`, `EApi`,
+    `EventMonitor`, `PortMirror`.
+  - `eos:cvp` — `Workspace`, `Studio`, `Configlet`, `ChangeControl`,
+    `Tag`, `Device`, `Inventory`, `ServiceAccount`, `IdentityProvider`,
+    `ImageBundle`, `Compliance`, `Alert`.
+- `docs/02-implementation-plan.md` §3.2 / §5: sprint scope (S5 — S9)
+  expanded to match the resource catalog; S4 marked done.
+- `docs/STATUS.md`: live progress dashboard mapping commits to phases and
+  sprints; per-gate quality status; open commitments.
+- `LICENSE` (Apache-2.0), `SECURITY.md`, `CONTRIBUTING.md`, `CODEOWNERS`,
+  PR template, issue templates.
 
 ### Changed
 
-- `deployments/containers/Containerfile.dev`: drop `mmdc` (Mermaid CLI) from
-  the dev container — Chromium-deps bloat. `make lint-mmd` runs mmdc on the
-  host or in CI's `lint-docs` job.
-
-### Added
-
-- Repository scaffold: project layout (`golang-standards/project-layout`), Makefile, dev container, Compose Specification dev stack.
-- `cmd/pulumi-resource-eos` and `cmd/pulumi-eos-gen` entry-point skeletons with `internal/version` ldflags injection.
-- `pkg/eos` public-types placeholder.
-- `golangci-lint v2.11.4` configuration · allowlist mode · severity-tiered · ~70 linters enabled.
-- `markdownlint-cli2`, Mermaid render-lint, `yamllint`, `cspell`, `commitlint` configurations and helpers.
-- Podman + podman-compose + podman-py automation in `scripts/automation/build.py`.
-- Vulnerability audit (`govulncheck` + `osv-scanner`) with allowlist support.
-- CI workflows: `ci.yml` (build · test · lint-go · lint-docs · vulncheck · trivy · commitlint), `security.yml` (CodeQL · gosec · weekly schedule), `scorecard.yml`, `release.yml`.
-- `goreleaser` configuration for cross-platform binaries, SBOM (syft), checksum, cosign signing.
-- Dependabot configuration for `gomod`, `github-actions`, `docker`, `pip`.
-- Documentation set: architecture, implementation plan (waterfall · 12 sprints · 6 phases), resource catalog skeleton, provider configuration schema preview, development workflow, testing matrix, release process, research references.
-- `LICENSE` (Apache-2.0), `SECURITY.md`, `CONTRIBUTING.md`, `CODEOWNERS`, PR template, issue templates.
+- `deployments/containers/Containerfile.dev`: drop `mmdc` (Mermaid CLI)
+  from the dev container — Chromium-deps bloat. `make lint-mmd` runs mmdc
+  on the host or in CI's `lint-docs` job.
+- `.cspell.json`: ~80 networking-domain words added to the dictionary.
 
 [Unreleased]: https://github.com/dantte-lp/pulumi-eos/compare/HEAD...HEAD

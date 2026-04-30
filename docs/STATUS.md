@@ -98,7 +98,7 @@ EVPN/VXLAN fabric.
 
 | Commit | Subject | Date |
 |---|---|---|
-| pending | `feat(l3): eos:l3:StaticRoute (ip route) with composite identity for ECMP / floating routes` | 2026-04-30 |
+| `908af76` | `feat(l3): eos:l3:StaticRoute (ip route) with composite identity for ECMP / floating routes` | 2026-04-30 |
 | `fabf547` | `build(verify): add make verify pre-commit gate; codify e2e + double-validation rule` | 2026-04-30 |
 | `8b2dd6e` | `feat(l3): eos:l3:Subinterface — 802.1Q L3 sub-interface (was "Interface (routed)")` | 2026-04-30 |
 | `eea0e74` | `feat(l3): eos:l3:Bfd singleton (router bfd timers + slow-timer + admin)` | 2026-04-30 |

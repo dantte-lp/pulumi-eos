@@ -7,6 +7,31 @@ and this project adheres to [Semantic Versioning 2.0.0](https://semver.org/spec/
 
 ## [Unreleased]
 
+### Changed
+
+- `docs/03-resource-catalog.md`: rebuilt to cover the EOS surface required
+  by a production EVPN/VXLAN multi-site fabric. New families:
+  `eos:l2:{Vlan, VlanRange, VlanInterface, Interface, PortChannel,
+  EvpnEthernetSegment, Mlag, VxlanInterface, MacAddressTable, Varp}`,
+  `eos:l3:{Loopback, Vrf, Interface, StaticRoute, RouterBgp, RouterOspf,
+  RouterIsis, Bfd, RoutingPolicy, Rcf, Rpki, GreTunnel}`,
+  `eos:security:{IpAccessList, Ipv6AccessList, MacAccessList,
+  RoleBasedAccessList, RouteMap, UserAccount, Role, AaaServer,
+  AaaAuthentication, SslProfile, MacSecProfile, MacSecBinding,
+  ControlPlanePolicing, Urpf}`,
+  `eos:qos:{ClassMap, PolicyMap, ServicePolicy, QosMap,
+  PriorityFlowControl, BufferProfile}`,
+  `eos:management:{ManagementInterface, Hostname, NtpServer, DnsServer,
+  Logging, Snmp, Sflow, Telemetry, EApi, EventMonitor, PortMirror}`. BGP
+  shape spelled out (peer-groups, per-AF, per-VRF, RD/RT formats with
+  separate `rt_admin_asn`). Routing-policy match/set vocabulary spelled
+  out. Per-platform feature constraints table added (Trident-3 EVPN
+  Gateway / L2 DCI gaps; 7050X3 GRE caveats; FPR-4115 ECMP zone limit).
+  Default values table (BFD timers, BGP keepalive/hold-time,
+  maximum-routes, MTU stack, MACsec). Resource dependency graph as
+  Mermaid.
+- `.cspell.json`: ~50 networking-domain words added to the dictionary.
+
 ### Added (S4+ — cEOS integration stack)
 
 - `deployments/compose/compose.integration.yml`: Compose Specification stack

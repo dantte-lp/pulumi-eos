@@ -90,13 +90,13 @@ func TestEAPI_ConfigSession_AbortIsClean(t *testing.T) {
 		t.Fatalf("OpenSession: %v", err)
 	}
 
-	if err := sess.Stage(ctx, []string{"vlan 999", "name pulumi-it-canary"}); err != nil {
+	if stageErr := sess.Stage(ctx, []string{"vlan 999", "name pulumi-it-canary"}); stageErr != nil {
 		_ = sess.Abort(ctx)
-		t.Fatalf("Stage: %v", err)
+		t.Fatalf("Stage: %v", stageErr)
 	}
 
-	if err := sess.Abort(ctx); err != nil {
-		t.Fatalf("Abort: %v", err)
+	if abortErr := sess.Abort(ctx); abortErr != nil {
+		t.Fatalf("Abort: %v", abortErr)
 	}
 
 	// A second OpenSession must succeed if Abort released the slot.
@@ -104,7 +104,7 @@ func TestEAPI_ConfigSession_AbortIsClean(t *testing.T) {
 	if err != nil {
 		t.Fatalf("OpenSession (after abort): %v", err)
 	}
-	if err := sess2.Abort(ctx); err != nil {
-		t.Fatalf("Abort second: %v", err)
+	if abortErr := sess2.Abort(ctx); abortErr != nil {
+		t.Fatalf("Abort second: %v", abortErr)
 	}
 }

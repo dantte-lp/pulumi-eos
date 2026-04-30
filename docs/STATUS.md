@@ -98,7 +98,7 @@ EVPN/VXLAN fabric.
 
 | Commit | Subject | Date |
 |---|---|---|
-| pending | `feat(client): minimum gNMI client (Capabilities + Get) — Tier-1 close` | 2026-04-30 |
+| `363f31e` | `feat(client): minimum gNMI client (Capabilities + Get) — Tier-1 close` | 2026-04-30 |
 | `fb0be36` | `feat(l2): eos:l2:MacAddressTable read-only data source via infer.Function` | 2026-04-30 |
 | `f4adb59` | `feat(device): eos:device:RawCli — diff-driven idempotent escape hatch` | 2026-04-30 |
 | `be4d732` | `feat(device): eos:device:Configlet — atomic raw CLI block via config-session` | 2026-04-30 |

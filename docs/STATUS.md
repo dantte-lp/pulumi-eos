@@ -98,7 +98,7 @@ EVPN/VXLAN fabric.
 
 | Commit | Subject | Date |
 |---|---|---|
-| pending | `feat(l3): eos:l3:Bfd singleton (router bfd timers + slow-timer + admin)` | 2026-04-30 |
+| `eea0e74` | `feat(l3): eos:l3:Bfd singleton (router bfd timers + slow-timer + admin)` | 2026-04-30 |
 | `c335d22` | `feat(l3): eos:l3:Vrf instance + per-VRF routing toggles` | 2026-04-30 |
 | `79b4945` | `docs(status): record 5dcc4df hash for Loopback Tier-2 open` | 2026-04-30 |
 | `5dcc4df` | `feat(l3): eos:l3:Loopback — first S6 / Tier-2 resource` | 2026-04-30 |

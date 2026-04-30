@@ -13,11 +13,22 @@ and this project adheres to [Semantic Versioning 2.0.0](https://semver.org/spec/
   `Update` / `Delete` / `Diff`) over eAPI configuration sessions, using
   the `internal/client/eapi.Session` semaphore-protected commit/abort
   primitives. Idempotent re-apply verified.
+- `eos:l2:VlanInterface` resource (S5): SVI / `interface VlanN`. Args:
+  `vlanId`, `vrf`, `ipAddress` (regular), `ipAddressVirtual` (anycast,
+  mutually exclusive with `ipAddress`), `mtu`, `description`,
+  `noAutostate`, `shutdown`. Read parses `show running-config interfaces
+  Vlan<id>` because the structured JSON omits SVI-specific fields like
+  `ip address virtual` and `vrf`.
 - `internal/resources/l2/vlan_test.go` unit tests: vlan-id range guard
   (1..4094), `buildVlanCmds` table tests, id-formatter sanity.
+- `internal/resources/l2/vlan_interface_test.go` unit tests:
+  `validateVlanInterface` (range, address conflict), `buildVlanInterfaceCmds`
+  table, `parseVlanInterfaceConfig` round-trip.
 - `test/integration/vlan_test.go` build-tagged integration test:
   end-to-end Create → Read → Update → idempotent re-apply → Delete →
   Read-after-delete against cEOS 4.36.0.1F.
+- `test/integration/vlan_interface_test.go` build-tagged integration
+  test: vlan + SVI Create → Read → Update → Delete cycle on cEOS.
 - `internal/config` package: extracted `Config`, `Annotate`, `Configure`,
   and the `EAPIClient` factory out of `internal/provider` so resource
   packages can derive clients without an import cycle.

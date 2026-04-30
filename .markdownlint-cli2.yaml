@@ -13,6 +13,8 @@ config:
   MD047: true
   MD049: { style: underscore }
   MD050: { style: asterisk }
+  MD058: false           # surrounding blank lines around tables (not enforced).
+  MD060: false           # table column style "compact" — too noisy; we use either compact or padded freely.
 
 ignores:
   - node_modules

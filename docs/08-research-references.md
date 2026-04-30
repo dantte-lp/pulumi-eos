@@ -8,7 +8,7 @@
 | Surface | Transport | Latest tested EOS | Notes |
 |---|---|---|---|
 | eAPI | JSON-RPC over HTTPS / Unix socket | 4.36.0F | `runCmds` method; per-cmd `revision`; VRF-bound. |
-| gNMI | gRPC/TLS · port 6030 | 4.36.0F | `Set` ops: `delete | replace | update | union_replace` (4.35.0F+). |
+| gNMI | gRPC/TLS · port 6030 | 4.36.0F | `Set` ops: `delete` / `replace` / `update` / `union_replace` (4.35.0F+). |
 | gNOI | gRPC/TLS | 4.36.0F | `OS.Install` (4.24.2F+), `System.Reboot` (4.27.0F+), `Cert.Rotate` (4.20.6F+), `Containerz` (4.34.2F+). |
 | OpenConfig | gNMI / RESTCONF / NETCONF | 4.36.0F | Per-path read/write disable since 4.28.0F. |
 | Config sessions | eAPI | 4.36.0F | `commit timer` confirmed-commit; ACL-fail auto-rollback. |

@@ -13,6 +13,12 @@ rules:
     allowed-values: ['true', 'false']
     check-keys: false
   document-start: disable
+  braces:
+    max-spaces-inside: 1
+    min-spaces-inside: 1
+  brackets:
+    max-spaces-inside: 1
+    min-spaces-inside: 0
 
 ignore: |
   node_modules/
@@ -21,3 +27,4 @@ ignore: |
   schemas/build/
   reports/
   .worktrees/
+  .serena/

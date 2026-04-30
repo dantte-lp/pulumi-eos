@@ -44,7 +44,7 @@ repos:
     hooks:
       - id: golangci-lint
         name: golangci-lint
-        entry: bash -c 'command -v golangci-lint >/dev/null 2>&1 && golangci-lint run --new-from-rev=HEAD~1 || echo "golangci-lint not on host; run inside dev container: make lint"'
+        entry: scripts/pre-commit-golangci-lint.sh
         language: system
         types: [go]
         pass_filenames: false

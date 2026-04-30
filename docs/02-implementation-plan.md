@@ -131,7 +131,7 @@ sequenceDiagram
     Pv->>E: commit timer 0:5:0
     E->>D: install + arm rollback timer
     Pv->>E: commit
-    E->>D: cancel timer; persist
+    E->>D: cancel timer + persist
   else cancel
     Pv->>E: abort
     E->>D: discard staged config

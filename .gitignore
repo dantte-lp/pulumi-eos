@@ -58,3 +58,7 @@ docs/_build/
 /.claude/
 /.codex/
 /.cursor/
+
+# Stray mermaid extracts (mmdc working files)
+*.md.*.mmd
+*.markdown.*.mmd

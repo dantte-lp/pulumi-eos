@@ -11,6 +11,7 @@ import (
 	"github.com/pulumi/pulumi-go-provider/infer"
 
 	"github.com/dantte-lp/pulumi-eos/internal/client/eapi"
+	"github.com/dantte-lp/pulumi-eos/internal/client/gnmi"
 )
 
 // Sentinel errors returned by client factories.
@@ -19,6 +20,55 @@ var (
 	ErrCVPNotConfigured  = errors.New("provider cvpUrl not configured")
 	ErrUnsupportedScheme = errors.New("eosUrl must be http:// or https://")
 )
+
+// GNMIClient builds a gNMI client from the active provider configuration,
+// optionally overriding host / username / password.
+//
+// The provider-level eosUrl is parsed for host. The gNMI port defaults to
+// gnmi.DefaultPort (6030); pass a host override that includes ":port" to
+// pick a non-default port. The TLS posture follows the eos* fields
+// (eosTlsCaCert, eosInsecure) — gNMI shares the management-plane creds.
+func (c *Config) GNMIClient(ctx context.Context, hostOverride, userOverride, passOverride *string) (*gnmi.Client, error) {
+	if c == nil {
+		return nil, ErrEOSNotConfigured
+	}
+	ep, err := splitEOSURL(c.EOSURL, hostOverride)
+	if err != nil {
+		return nil, err
+	}
+	if ep.Host == "" {
+		return nil, ErrEOSNotConfigured
+	}
+
+	username := c.EOSUsername
+	if userOverride != nil && *userOverride != "" {
+		username = *userOverride
+	}
+	password := ""
+	if c.EOSPassword != nil {
+		password = *c.EOSPassword
+	}
+	if passOverride != nil && *passOverride != "" {
+		password = *passOverride
+	}
+
+	insecureTLS := false
+	if c.EOSInsecure != nil {
+		insecureTLS = *c.EOSInsecure
+	}
+	var caCert []byte
+	if c.EOSTLSCACert != nil {
+		caCert = []byte(*c.EOSTLSCACert)
+	}
+	return gnmi.Dial(ctx, gnmi.Config{
+		Host:               ep.Host,
+		Port:               ep.Port,
+		Username:           username,
+		Password:           password,
+		CACert:             caCert,
+		InsecureSkipVerify: insecureTLS,
+	})
+}
 
 // EAPIClient builds an eAPI client from the active provider configuration,
 // optionally overriding host / username / password (e.g. when a per-resource

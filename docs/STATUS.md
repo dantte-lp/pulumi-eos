@@ -8,7 +8,7 @@
 |---|---|---|---|
 | Phase 1 — Requirements | S1 | done | `docs/02-implementation-plan.md`, `docs/08-research-references.md` |
 | Phase 2 — Design | S2 — S3 | done (artefacts) | `docs/01-architecture.md`, `docs/03-resource-catalog.md`, `docs/04-provider-config.md` |
-| Phase 3 — Implementation | S4 — S9 | S4 done; S5 — S9 pending | per-sprint table below |
+| Phase 3 — Implementation | S4 — S9 | S4 + S5 done; S6 — S9 pending | per-sprint table below |
 | Phase 4 — Verification | S10 — S11 | pending | — |
 | Phase 5 — Deployment | S12 | pending | — |
 | Phase 6 — Maintenance | continuous | pending | — |
@@ -21,7 +21,7 @@
 | S2 — System design | Component diagram, sequence diagrams, transport matrix | done | `docs/01-architecture.md` |
 | S3 — Detailed design | Resource catalog + field shapes, ADRs | done (catalog), schema gen pending | `docs/03-resource-catalog.md`, `docs/04-provider-config.md` |
 | S4 — Foundation | Provider runtime, eAPI/CVP clients, cEOS integration, CI green; `eos:device:Configlet` lacuna | done | commits `f6ae43f`, `0117e8a`, `6565ccd`, `9fa0b40`, `eb6cdc8`, `98daa9c`, `d661199`, Configlet (this commit) |
-| S5 — L2 family | `Vlan`, `VlanRange`, `VlanInterface`, `Interface`, `PortChannel`, `EvpnEthernetSegment`, `Mlag`, `VxlanInterface`, `MacAddressTable`, `Varp`, `Stp`; `RawCli` escape; minimum gNMI client | in progress (11/11 core L2 + `RawCli` escape shipped; gNMI client pending) | shipped: `Vlan` (`fa20b40`), `VlanInterface` (`2a77f2e`), `Interface` (`449ea8e`), `PortChannel` + shared `SwitchportFields` (`b516f28`), `VxlanInterface` (`193a4e6`), `EvpnEthernetSegment` (`09dd4f1`), `Mlag` (`b3e2c5d`), `Stp` (`2a64a58`), `Varp` (`726b26c`), `VlanRange` (`5fa01a1`), `RawCli` (`f4adb59`), `MacAddressTable` (this commit); 15/15 cEOS integration tests pass; pending: minimum gNMI client. |
+| S5 — L2 family | `Vlan`, `VlanRange`, `VlanInterface`, `Interface`, `PortChannel`, `EvpnEthernetSegment`, `Mlag`, `VxlanInterface`, `MacAddressTable`, `Varp`, `Stp`; `RawCli` escape; minimum gNMI client | done | shipped: `Vlan` (`fa20b40`), `VlanInterface` (`2a77f2e`), `Interface` (`449ea8e`), `PortChannel` + shared `SwitchportFields` (`b516f28`), `VxlanInterface` (`193a4e6`), `EvpnEthernetSegment` (`09dd4f1`), `Mlag` (`b3e2c5d`), `Stp` (`2a64a58`), `Varp` (`726b26c`), `VlanRange` (`5fa01a1`), `RawCli` (`f4adb59`), `MacAddressTable` (`fb0be36`), minimum gNMI client (this commit); 16/16 cEOS integration tests pass (incl. gNMI Capabilities). |
 | S6 — L3 family | `Vrf`, `RouterBgp` (peer-groups, EVPN AF), `Bfd`, `Rcf`, `Rpki`, `Vrrp`, `Pbr` | pending | — |
 | S7 — Security / Mgmt / Multicast / QoS | ACLs, AAA, MACsec, DHCP, Igmp / Pim / Msdp, QoS | pending | — |
 | S8 — CloudVision | `Workspace`, `Studio`, `ChangeControl`, `Configlet`, `Tag`, … | pending | — |
@@ -69,7 +69,7 @@ EVPN/VXLAN fabric.
 
 | Tier | Scope | Resources | Why first |
 |---|---|---|---|
-| **Tier 1 — Close S4 + S5** | ~~`eos:device:Configlet` (S4 lacuna)~~ shipped, ~~`eos:device:RawCli`~~ shipped, ~~`eos:l2:MacAddressTable` (`infer.Function`)~~ shipped, minimum gNMI client. | 1 item remaining | Ship the only escape-hatch surface left in the EOS modelling layer; provides a path for users to drive unmodeled features in v0.1 without blocking on S6. |
+| ~~**Tier 1 — Close S4 + S5**~~ | ~~`eos:device:Configlet`~~, ~~`eos:device:RawCli`~~, ~~`eos:l2:MacAddressTable`~~, ~~minimum gNMI client~~ — all shipped. | 0 items | Tier 1 closed; v0.1.0-rc.1 unblocked. |
 | **Tier 2 — Open S6 (L3 critical path)** | `Loopback` → `Vrf` → `Bfd` → `Interface` (routed) → `StaticRoute` → `RouterBgp` (peer-groups + per-AF + per-VRF + EVPN AF + RD/RT) → `RoutingPolicy` → `Rcf` → `Rpki` → `RouterOspf` → `GreTunnel` → `Vrrp` → `PolicyBasedRouting` → `ResilientEcmp`. | 14 items | `RouterBgp` is the single largest resource in the project; everything from underlay reachability to overlay EVPN flows through it. Sequencing `Loopback`/`Vrf`/`Bfd` first makes BGP reusable across both planes. |
 | **Tier 3a — S7 management bootstrap** | `Hostname`, `ManagementInterface`, `NtpServer`, `DnsServer`, `Logging`, `EApi`. | 6 items | Required day-zero on every device; trivial shape; enables all subsequent S7 work to drive a real device through Pulumi. |
 | **Tier 3b — S7 security core** | `IpAccessList`, `Ipv6AccessList`, `MacAccessList`, `RoleBasedAccessList`, `UserAccount`, `Role`, `AaaServer`, `AaaAuthentication`, `SslProfile`, `ControlPlanePolicing`, `Urpf`, `ServiceAcl`. | 12 items | Control plane and data-plane policy. ACLs are referenced by routing-policy, PBR, and CoPP, so they unlock cross-resource composition. |
@@ -92,13 +92,14 @@ EVPN/VXLAN fabric.
 | ~~Tier 1 — `eos:device:Configlet`~~ shipped | S4 lacuna | — |
 | ~~Tier 1 — `eos:device:RawCli`~~ shipped | S5 closeout | — |
 | ~~Tier 1 — `eos:l2:MacAddressTable` (`infer.Function`)~~ shipped | S5 closeout | — |
-| Tier 1 — minimum gNMI client (`internal/client/gnmi/`) | S5 closeout | — |
+| ~~Tier 1 — minimum gNMI client (`internal/client/gnmi/`)~~ shipped | S5 closeout | — |
 
 ## Repository activity
 
 | Commit | Subject | Date |
 |---|---|---|
-| pending | `feat(l2): eos:l2:MacAddressTable read-only data source via infer.Function` | 2026-04-30 |
+| pending | `feat(client): minimum gNMI client (Capabilities + Get) — Tier-1 close` | 2026-04-30 |
+| `fb0be36` | `feat(l2): eos:l2:MacAddressTable read-only data source via infer.Function` | 2026-04-30 |
 | `f4adb59` | `feat(device): eos:device:RawCli — diff-driven idempotent escape hatch` | 2026-04-30 |
 | `be4d732` | `feat(device): eos:device:Configlet — atomic raw CLI block via config-session` | 2026-04-30 |
 | `5fa01a1` | `feat(l2): eos:l2:VlanRange bulk allocation helper` | 2026-04-30 |

@@ -31,6 +31,12 @@ management api http-commands
    protocol http
    protocol https
    no protocol https certificate
+exit
+management api gnmi
+   transport grpc default
+      port 6030
+      exit
+   exit
 end
 write memory
 EOF

@@ -277,6 +277,8 @@
     "encap",
     "extcomm",
     "listtype",
+    "aspath",
+    "ASPATH",
     "trivy",
     "unparam",
     "vlan",

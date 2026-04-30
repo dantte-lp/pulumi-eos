@@ -64,6 +64,7 @@ func New() (provider.Provider, error) {
 			infer.Resource(&l3.RouteMap{}),
 			infer.Resource(&l3.CommunityList{}),
 			infer.Resource(&l3.ExtCommunityList{}),
+			infer.Resource(&l3.AsPathAccessList{}),
 		).
 		WithFunctions(
 			infer.Function(&l2.MacAddressTable{}),

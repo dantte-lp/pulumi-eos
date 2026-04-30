@@ -104,7 +104,7 @@ EVPN/VXLAN fabric.
 
 | Commit | Subject | Date |
 |---|---|---|
-| pending | `feat(l3): Rcf v1 — inline Code via eAPI rich-command + SourceFile + SourceUrl; eapi.Session.StageRich primitive` | 2026-05-01 |
+| `8e02a46` | `feat(l3): Rcf v1 — inline Code via eAPI rich-command + SourceFile + SourceUrl; eapi.Session.StageRich primitive` | 2026-05-01 |
 | `fbdfbb5` | `feat(l3): eos:l3:Rcf v0 — file-reference RCF unit (inline-code deferred to S9)` | 2026-05-01 |
 | `72c7db5` | `feat(l3): close audit gap — RouteMap set extcommunity rt additive flag` | 2026-05-01 |
 | `888a110` | `feat(l3): eos:l3:AsPathAccessList — closes RoutingPolicy 5/5 decomposition` | 2026-05-01 |

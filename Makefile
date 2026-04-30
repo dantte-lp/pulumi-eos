@@ -60,6 +60,13 @@ shell:
 
 all: build test lint lint-docs
 
+# `verify` is the canonical pre-commit gate per docs/05-development.md
+# "Mandatory per-resource verification rules": runs the full Go toolchain
+# pass plus a live cEOS integration round-trip. Fails fast on the first
+# broken gate.
+verify: all test-integration-keep
+	@echo "verify: all gates green"
+
 build: build-provider
 
 build-provider:
@@ -105,8 +112,16 @@ IT_DC      := podman-compose -f $(IT_COMPOSE)
 
 test-integration:
 	$(MAKE) test-integration-up
-	$(EXEC) env EOS_HOST=host.containers.internal go test -tags integration ./test/integration/... -race -count=1 -v
+	$(EXEC) env EOS_HOST=host.containers.internal GNMI_HOST=host.containers.internal go test -tags integration ./test/integration/... -race -count=1 -v
 	$(MAKE) test-integration-down
+
+# Same as test-integration but keeps the cEOS container running for the
+# next iteration. Used by `make verify` and by the daily local loop —
+# bringing cEOS up takes ~60s, so re-using it across iterations is the
+# default for interactive work.
+test-integration-keep:
+	$(MAKE) test-integration-up
+	$(EXEC) env EOS_HOST=host.containers.internal GNMI_HOST=host.containers.internal go test -tags integration ./test/integration/... -race -count=1 -v
 
 test-integration-up:
 	$(IT_DC) up -d
@@ -174,7 +189,7 @@ lint-yaml:
 	yamllint -c .yamllint.yaml .
 
 lint-spell:
-	cspell --no-progress --no-summary --config .cspell.json "**/*.md" "**/*.go" "**/*.yaml" "**/*.yml"
+	$(EXEC) cspell --no-progress --no-summary --config .cspell.json "**/*.md" "**/*.go" "**/*.yaml" "**/*.yml"
 
 lint-docs: lint-md lint-mmd lint-yaml lint-spell
 

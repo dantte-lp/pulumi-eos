@@ -111,7 +111,7 @@ func (a *SubinterfaceArgs) Annotate(an infer.Annotator) {
 	an.Describe(&a.IPAddress, "Primary IPv4 address (CIDR, e.g. 10.0.0.1/24).")
 	an.Describe(&a.IPv6Address, "Primary IPv6 address (CIDR).")
 	an.Describe(&a.Vrf, "Optional non-default VRF binding.")
-	an.Describe(&a.Mtu, "IP MTU.")
+	an.Describe(&a.Mtu, "IP MTU. Per-subinterface MTU is platform-conditional — cEOSLab 4.36 returns 'Unavailable command' at commit, while production EOS (DCS-7280R*, 7500R*, 7050X* etc.) accepts it.")
 	an.Describe(&a.Shutdown, "When true, sub-interface is administratively shut down.")
 	an.Describe(&a.Bfd, "Per-sub-interface BFD timers (interval / minRx / multiplier).")
 	an.Describe(&a.Host, "Optional management hostname override.")

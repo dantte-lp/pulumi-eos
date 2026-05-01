@@ -404,6 +404,10 @@ and this project adheres to [Semantic Versioning 2.0.0](https://semver.org/spec/
 
 ### Removed
 
+- `eos:l3:Rpki.Transport` keyword `ssh` (this commit). Per EOS
+  TOI 14470 §Limitations, RPKI RTR supports only TCP and TLS.
+  `ssh` was never a valid EOS keyword. Validator now accepts
+  `{tcp, tls}` only; sentinel error message updated.
 - `eos:l3:RouteMap` `Match.Origin` field (commit `8d7ea48`). EOS
   does not accept `match origin igp|egp|incomplete` — the keyword
   is rejected with "Incomplete token" by every cEOS variant.
@@ -422,6 +426,21 @@ and this project adheres to [Semantic Versioning 2.0.0](https://semver.org/spec/
 
 ### Changed
 
+- `eos:l3:Rpki.Transport` accepted set changed from
+  `{tcp, ssh}` to `{tcp, tls}` (this commit). Backwards-incompatible
+  for any program that used `ssh` — but the previous setting was
+  also incorrect (it never reached running-config; cEOS silently
+  rejected it at commit). New `tls` value emits `transport tls`
+  per TOI 14470 §"Configuring secure transport — TLS".
+- Tier 2 ordering re-sequenced by dependency depth (this commit):
+  `ResilientEcmp` ships before `PolicyBasedRouting` in S6 closeout
+  to keep zero-dependency work in front of ACL-coupled work.
+- Several resource fields newly tagged as cEOSLab platform-quirks
+  (input retained, integration body skipped — production EOS
+  hardware accepts them all): `eos:l3:GreTunnel.DontFragment`,
+  `eos:l3:GreTunnel.Mode=ipsec`, `eos:l3:Subinterface.Mtu`,
+  `eos:l3:Rpki.Transport=tls`. Annotate strings updated to call
+  out the platform-conditional behaviour.
 - `eos:l3:GreTunnel` mode set narrowed from
   `{gre, mpls-gre, mpls-over-gre, ipsec}` to `{gre, ipsec}` (commit
   `8d7ea48`). cEOSLab rejects `mpls-gre` and `mpls-over-gre` at

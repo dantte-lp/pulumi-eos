@@ -24,7 +24,7 @@ var (
 	ErrRpkiPortOutOfRange      = errors.New("rpki port must be in 1..65535")
 	ErrRpkiPreferenceRange     = errors.New("rpki preference must be in 1..10")
 	ErrRpkiIntervalNonPositive = errors.New("rpki refreshInterval / retryInterval / expireInterval must be > 0 seconds")
-	ErrRpkiTransportInvalid    = errors.New("rpki transport must be 'tcp' or 'ssh'")
+	ErrRpkiTransportInvalid    = errors.New("rpki transport must be 'tcp' or 'tls' (RFC 8210 §4 + EOS TOI 14470 — `ssh` was never an EOS keyword; the TOI explicitly limits to TCP and TLS)")
 )
 
 // rpkiCacheNameRe enforces the EOS-accepted RPKI cache name grammar.
@@ -32,10 +32,14 @@ var (
 var rpkiCacheNameRe = regexp.MustCompile(`^[A-Za-z][A-Za-z0-9_-]*$`)
 
 // validRpkiTransport enumerates the transport keywords EOS accepts on
-// `transport <kind>` inside an `rpki cache` block.
+// `transport <kind>` inside an `rpki cache` block. Per EOS TOI 14470
+// (BGP prefix origin validation with RPKI) §Limitations: "The only
+// transports supported for connecting to the RPKI cache are
+// unprotected TCP and TLS." `ssh` was never a valid EOS keyword —
+// removed from the input shape after audit.
 var validRpkiTransport = map[string]struct{}{
 	"tcp": {},
-	"ssh": {},
+	"tls": {},
 }
 
 // Rpki models a single EOS RPKI ROA cache configuration. Caches live
@@ -88,7 +92,7 @@ type RpkiArgs struct {
 	ExpireInterval *int `pulumi:"expireInterval,optional"`
 	// LocalInterface pins the source interface for the RTR session.
 	LocalInterface *string `pulumi:"localInterface,optional"`
-	// Transport is "tcp" (default) or "ssh".
+	// Transport is "tcp" (default) or "tls" (per EOS TOI 14470).
 	Transport *string `pulumi:"transport,optional"`
 
 	// Host overrides the provider-level eosUrl host for this resource.
@@ -124,7 +128,7 @@ func (a *RpkiArgs) Annotate(an infer.Annotator) {
 	an.Describe(&a.RetryInterval, "Connect-retry interval in seconds.")
 	an.Describe(&a.ExpireInterval, "ROA stale-time in seconds.")
 	an.Describe(&a.LocalInterface, "Source interface pin for the RTR session (e.g. Management1).")
-	an.Describe(&a.Transport, "Transport keyword: tcp (default) or ssh.")
+	an.Describe(&a.Transport, "Transport keyword: tcp (default) or tls. RPKI uses RTR over TCP or TLS only; SSH is NOT an EOS keyword (per TOI 14470 §Limitations).")
 	an.Describe(&a.Host, "Optional management hostname override.")
 	an.Describe(&a.Username, "Optional AAA username override.")
 	an.Describe(&a.Password, "Optional AAA password override.")
@@ -267,7 +271,7 @@ func applyRpki(ctx context.Context, args RpkiArgs, remove bool) error {
 //	      retry-interval <sec>
 //	      expire-interval <sec>
 //	      local-interface <name>
-//	      transport tcp|ssh
+//	      transport tcp|tls
 //
 // Negate-then-rebuild is intentionally NOT used: a single `no rpki
 // cache <name>` followed by full re-emit would briefly sever the

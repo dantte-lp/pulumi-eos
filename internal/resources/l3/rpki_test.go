@@ -32,7 +32,8 @@ func TestValidateRpki(t *testing.T) {
 		{"retry_neg", func(a RpkiArgs) RpkiArgs { a.RetryInterval = new(-1); return a }, ErrRpkiIntervalNonPositive},
 		{"expire_ok", func(a RpkiArgs) RpkiArgs { a.ExpireInterval = new(600); return a }, nil},
 		{"transport_tcp", func(a RpkiArgs) RpkiArgs { a.Transport = new("tcp"); return a }, nil},
-		{"transport_ssh", func(a RpkiArgs) RpkiArgs { a.Transport = new("ssh"); return a }, nil},
+		{"transport_tls", func(a RpkiArgs) RpkiArgs { a.Transport = new("tls"); return a }, nil},
+		{"transport_ssh_rejected", func(a RpkiArgs) RpkiArgs { a.Transport = new("ssh"); return a }, ErrRpkiTransportInvalid},
 		{"transport_bad", func(a RpkiArgs) RpkiArgs { a.Transport = new("quic"); return a }, ErrRpkiTransportInvalid},
 	}
 	for _, tc := range tests {
@@ -102,13 +103,13 @@ func TestBuildRpkiCmds(t *testing.T) {
 			},
 		},
 		{
-			name: "ssh_transport",
-			args: RpkiArgs{Name: "C2", BgpAsn: 65000, CacheHost: "10.0.0.1", Transport: new("ssh")},
+			name: "tls_transport",
+			args: RpkiArgs{Name: "C2", BgpAsn: 65000, CacheHost: "10.0.0.1", Transport: new("tls")},
 			want: []string{
 				"router bgp 65000",
 				"rpki cache C2",
 				"host 10.0.0.1",
-				"transport ssh",
+				"transport tls",
 				"exit",
 				"exit",
 			},

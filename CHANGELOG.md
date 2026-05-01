@@ -9,6 +9,21 @@ and this project adheres to [Semantic Versioning 2.0.0](https://semver.org/spec/
 
 ### Added
 
+- Arista 4.36.0.1F release archive integrated (this commit).
+  User-supplied `EOS-4.36.0.1F.tar` (8 GB) extracted to
+  `/opt/software/arista-extracted/EOS-4.36.0.1F/` (outside the
+  repo; `.tmp/arista` is a symlink). Adds the missing
+  `Aboot-veos-serial-8.0.2.iso` (vEOS bring-up bootloader),
+  `EOS-4.36.0.1F-SysMsgGuide.csv` (2 747 syslog patterns —
+  reserved for future eAPI error-mapping work), the full
+  `.swi` set for hardware-class validation in S10, and the
+  `EOS-4.36.0.1F-CommandApiGuide.pdf` (already indexed in
+  arista-mcp; the local PDF is a fallback). compose.veos.yml
+  now mounts the Aboot ISO as the primary CDROM; vEOS reaches
+  EOS init stage 2 reliably but still hits the ZTP loop because
+  the FAT32-disk `zerotouch-config DISABLE` token is not
+  auto-copied — vrnetlab-style launch.py needed to close the
+  bring-up; tracked as a stretch task.
 - `eos:l3:PolicyBasedRouting` resource v0 (S6, Tier 2 #18 —
   closes Tier 2 / S6 18/18, commit `4bc171a`). Top-level
   `policy-map type pbr <name>` with optional service-policy

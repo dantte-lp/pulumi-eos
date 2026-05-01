@@ -97,24 +97,31 @@ against the vEOS-lab port. The integration test files address the
 target via the `EOS_HOST` + `EOS_PORT` env-vars so the same Go
 code drives both.
 
-### vEOS bring-up — WIP
+### vEOS bring-up
 
-Boot reaches "Welcome to Arista Networks EOS 4.36.0.1F" reliably
-via `make veos-up`, but the VM gets stuck in the
-**Zero-Touch-Provisioning** loop because Aboot does not yet pick
-up the `zerotouch-config DISABLE` token from the secondary FAT32
-USB disk. Manual `zerotouch cancel` over the qemu serial console
-exits ZTP, but that needs an interactive bypass.
+The user-supplied `EOS-4.36.0.1F.tar` archive (8 GB, extracted to
+`/opt/software/arista-extracted/EOS-4.36.0.1F/` outside the repo)
+contains the full Arista release set, including the missing piece
+that earlier blocked the bring-up:
 
-Next-step options (tracked in TaskList):
+| Artefact | Size | Use |
+|---|---|---|
+| `Aboot-veos-serial-8.0.2.iso` | 6 MB | Bootable ISO with the Aboot bootloader + serial-console support. **This is the file the vrnetlab approach mounts as the primary CDROM** to skip ZTP and serialise the boot output. Without it the qcow2 lands in ZTP-loop forever. |
+| `vEOS64-lab-4.36.0.1F.qcow2` | 613 MB | The EOS root file system (we already had this from `ardl get eos`). |
+| `EOS-4.36.0.1F.swi` / `EOS64-4.36.0.1F.swi` | 1.6 / 1.7 GB | swi for hardware platforms. Reserved for the S10 matrix-test stage. |
+| `EOSuni-4.36.0.1F.swi` | 4.1 GB | Unified swi (cross-platform). Same. |
+| `EOS64-4.36.0.1F-docker.swix` | 111 MB | Docker (cEOS) extension package. |
+| `EOS-4.36.0.1F-CommandApiGuide.pdf` | 4.3 MB | Already indexed in arista-mcp (`document_id: 8a6304f8a31aa03f`) — prefer the MCP query over the local PDF. |
+| `EOS-4.36.0.1F-SysMsgGuide.csv` | 808 KB | Structured table of 2 747 syslog patterns (Facility, Mnemonic, Format, Severity, Explanation, Recommended Action). Reserved for the future eAPI error-mapping work — when the runtime client meets a syslog-id error envelope, it can look up a typed sentinel in this table instead of regex-matching. Tracked as a stretch task; not yet wired in. |
+| `EOS-4.36.0.1F-SysMsgGuide.pdf` | 793 KB | Same content as the CSV in human-readable form. |
+| `Aboot-norcal16-…` | 15 MB | Aboot for hardware (norcal16 platform); not used by vEOS-lab. |
+| `EOS-4.23.9M-glibc64.swix` | 4 MB | Older glibc compatibility shim. Reserved. |
 
-1. Build a proper vrnetlab-style image (clone
-   `srl-labs/vrnetlab/arista/veos`, drop the qcow2 in, run `make`)
-   — vrnetlab's launch.py knows the ZTP-bypass dance and the
-   correct disk layout (Aboot-veos-serial USB image).
-2. Pre-bake `zerotouch-config DISABLE` into a `boot-extensions`
-   layer on the qcow2 itself (via `qemu-img amend` + an
-   intermediate Linux loop-mount) so the file exists in
-   `/mnt/flash` before Aboot reads it.
-
-Both are R&D items — they don't block the cEOS-lab default loop.
+`compose.veos.yml` is wired to mount the Aboot ISO as the primary
+CDROM (`-drive index=0,media=cdrom,boot=d`) and the qcow2 as
+disk 1. With Aboot driving the boot, the vEOS-lab VM finishes
+EOS init stage 2 and (per the TOI 17517 Arfa fast-path) reaches
+the same forwarding-plane state as cEOS-lab — so the surface gain
+in 4.36 is identical between the two targets, but vEOS-lab now
+exposes a real serial console for boot-time diagnostics that
+cEOS-lab cannot.

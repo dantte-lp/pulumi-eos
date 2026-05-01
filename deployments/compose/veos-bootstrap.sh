@@ -74,15 +74,18 @@ mkfs.fat -F32 -n CONFIG "$WORK/flash.img" >/dev/null
 mcopy -i "$WORK/flash.img" "$WORK/flash/startup-config" ::startup-config
 mcopy -i "$WORK/flash.img" "$WORK/flash/zerotouch-config" ::zerotouch-config
 
-echo "[bootstrap] launching qemu..."
+ABOOT=/qcow/Aboot-veos-serial-8.0.2.iso
+echo "[bootstrap] launching qemu (Aboot=$ABOOT)..."
 exec qemu-system-x86_64 \
   -name pulumi-eos-it-veos \
   -enable-kvm \
   -cpu host \
   -smp 2 \
   -m 2048 \
-  -drive file="$WORK/disk.qcow2",if=ide,format=qcow2 \
-  -drive file="$WORK/flash.img",if=ide,format=raw,index=1 \
+  -drive file="$ABOOT",if=ide,format=raw,index=0,media=cdrom \
+  -drive file="$WORK/disk.qcow2",if=ide,format=qcow2,index=1 \
+  -drive file="$WORK/flash.img",if=ide,format=raw,index=2 \
+  -boot d \
   -netdev user,id=mgmt,hostfwd=tcp:0.0.0.0:80-:80,hostfwd=tcp:0.0.0.0:443-:443,hostfwd=tcp:0.0.0.0:22-:22 \
   -device e1000,netdev=mgmt,mac=52:54:00:01:01:01 \
   -nographic \

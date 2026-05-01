@@ -42,7 +42,7 @@ flowchart LR
 |---|---|
 | Requirements (S1) | done |
 | Design (S2 – S3) | done (catalog), schema-gen pending |
-| Implementation (S4 – S9) | S4 done; S5 done (RC tag pending); S6 in progress (17/18 Tier-2 shipped); S7 — S9 pending |
+| Implementation (S4 – S9) | S4 done; S5 done (RC tag pending); **S6 done (18/18 Tier-2 closed)**; S7 — S9 pending |
 | Verification (S10 – S11) | planned |
 | Deployment (S12) | planned |
 
@@ -50,15 +50,15 @@ flowchart LR
 |---|---:|---|
 | `eos:device` | 3 / 6 | S4 — S9 |
 | `eos:l2` | 11 / 16 | S5 — post-S9 |
-| `eos:l3` | 17 / 20 | S6 — post-S9 |
+| `eos:l3` | 18 / 20 | S6 closed; `RouterIsis` + `Nat` post-S9 stretch |
 | `eos:management` | 0 / 11 | S7 |
 | `eos:security` | 0 / 19 | S7 |
 | `eos:multicast` | 0 / 6 | S7 |
 | `eos:qos` | 0 / 6 | S7 |
 | `eos:cvp` | 0 / 14 | S8 — post-S8 |
-| **Total** | **31 / 98 (32 %)** | — |
+| **Total** | **32 / 98 (33 %)** | — |
 
-Quality: 33/33 cEOS integration tests pass; 0 issues across 83 golangci-lint linters.
+Quality: 34/34 cEOS integration tests pass; 0 issues across 83 golangci-lint linters.
 
 S7 (security / mgmt / multicast / QoS) is sequenced by **dependency
 depth** into Tier 3.0 → 3.7, with `IpAccessList` + `SslProfile`

@@ -9,6 +9,21 @@ and this project adheres to [Semantic Versioning 2.0.0](https://semver.org/spec/
 
 ### Added
 
+- `eos:l3:PolicyBasedRouting` resource v0 (S6, Tier 2 #18 —
+  closes Tier 2 / S6 18/18, commit `4bc171a`). Top-level
+  `policy-map type pbr <name>` with optional service-policy
+  attachments per User Manual §10.2.7.43 + TOI 14429 + TOI 14031
+  (PBR-in-any-VRF) + TOI 13804 (nexthop-group action) +
+  TOI 17517 (Arfa default — PBR enabled on cEOS-lab since
+  4.30.1F). v0 surface: `name` (PK), `sequences[]` (each picks a
+  class-map and emits `setNexthop` / `setNexthopGroup` / `drop`),
+  `attachInterfaces[]` (input-only). Class-map and ACL names are
+  string-typed pending Tier 3.1 (`eos:security:IpAccessList`).
+  EOS-keyword findings: `description` rejected inside PBR
+  policy-map (unlike QoS); `set drop` rejected (bare `drop`);
+  `set ipv6 nexthop` is wrong (`set nexthop <ipv6-addr>`);
+  `set nexthop ... recursive` not in 4.36; each sequence MUST
+  reference a unique class-map.
 - Resource-dependency graph in `docs/01-architecture.md`
   (this commit). Mermaid diagram showing every cross-resource
   edge in S6 + S7 plus the `SslProfile` fan-out (RPKI TLS,

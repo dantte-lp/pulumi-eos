@@ -9,6 +9,38 @@ and this project adheres to [Semantic Versioning 2.0.0](https://semver.org/spec/
 
 ### Added
 
+- `eos:l3:RouterOspf` resource v0 (S6, Tier 2 #14, this commit):
+  EOS OSPFv2 process under `router ospf <instance> [vrf <vrf>]`. v0
+  surface covers the day-zero leaf-spine fabric set: process / vrf
+  identity, routerId, shutdown, maxLsa, maximumPaths,
+  autoCostReferenceBandwidth, networks [{prefix, area}], areas
+  [{id, type:stub|stub-no-summary|nssa|nssa-default-information-originate,
+  defaultCost, ranges, nssaMetric, nssaMetricType, nssaOnly}],
+  redistribute [{source:connected|static|bgp|isis, routeMap}],
+  defaultInformationOriginate, summaryAddresses, distance, timers
+  (spf delay initial / out-delay / pacing flood), gracefulRestartHelper,
+  logAdjacencyChanges, passiveInterfaceDefault + (no)passiveInterfaces.
+  Render uses negate-then-rebuild inside one config-session — stale
+  area / network / redistribute lines are guaranteed evicted before
+  re-emit, while EOS' session diff applies the minimum delta (no
+  process restart). Area ids canonicalised to dotted-quad on render
+  to match cEOS' running-config; distance values rendered as three
+  separate lines (single-line form rejected on 4.36 — probe-verified).
+  Deferred to v1 (probe-rejected on cEOS 4.36): `area X nssa no-
+  redistribution`, mixed `nssa no-summary default-information-
+  originate`, `bfd all-interfaces` (different render form),
+  `graceful-restart restart-period N`, `area virtual-link`, `area
+  filter prefix-list`, OSPFv3 (separate `eos:l3:RouterOspfv3`).
+  Source: EOS User Manual §16.2 (OSPFv2 Commands); cEOS 4.36.0.1F
+  live probe (commit `3c13006`); double validation per
+  docs/05-development.md rule 2.
+- `eos:device:Device` unit + integration tests (audit-gap close):
+  `internal/resources/device/device_test.go` pins the Delete-no-op
+  contract; `test/integration/device_test.go` pins the `show
+  version` JSON schema (modelName / serialNumber / version /
+  systemMacAddress / hardwareRevision must remain non-empty
+  strings) so a silent eAPI schema change does not zero device
+  facts during refresh.
 - `eos:l3:Rpki` resource (S6, Tier 2 #13, commit `1e93356`): EOS BGP
   RPKI cache. Composes with `router bgp <asn>` independently of
   `eos:l3:RouterBgp` — multiple caches per ASN supported (canonical

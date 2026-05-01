@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning 2.0.0](https://semver.org/spec/
 
 ### Added
 
-- `eos:l3:GreTunnel` resource v0 (S6, Tier 2 #15, this commit):
+- `eos:l3:GreTunnel` resource v0 (S6, Tier 2 #15, commit `d2ee58a`):
   EOS GRE tunnel interface (`interface Tunnel<id>`). v0 surface
   covers identity (id 0..65535), encapsulation mode (gre |
   mpls-gre | mpls-over-gre | ipsec), underlay (source / destination

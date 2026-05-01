@@ -46,7 +46,7 @@
 | Spelling | `cspell` | clean |
 | LSP | `gopls v0.21.1` | references resolve across packages |
 | Probe rule 2b | `scripts/lint-probes.sh` | clean (no direct `Abort` in probe files) |
-| Cross-resource keyword audit | `make probe-audit` — Python harness under `tools/probe_audit/` (uv + ruff + ty) | last run: 93/94 lines accepted across 13 l3 surfaces; only cEOSLab `tunnel dont-fragment` PLAT (already documented). Caught + closed: `RouteMap.Match.Origin`, `GreTunnel.Mode={mpls-gre,mpls-over-gre}` (commit `8d7ea48`). |
+| Cross-resource keyword audit | `make probe-audit` — Python harness under `tools/probe_audit/` (uv + ruff + ty) | last run: 95/98 lines accepted across 14 l3 surfaces. Not-OK breakdown: 2 PBR FAIL (`set nexthop … recursive` not in EOS 4.36; `set ipv6 nexthop` wrong syntax — replacement is `set nexthop <ipv6-addr>`; both documented in resource Annotate); 1 PLAT (cEOSLab `tunnel dont-fragment` — production EOS hardware accepts). Caught + closed: `RouteMap.Match.Origin`, `GreTunnel.Mode={mpls-gre,mpls-over-gre}` (commit `8d7ea48`). |
 | Python lint (audit harness) | `ruff check` + `ruff format --check` + `ty check` | clean |
 | Emulator coverage | cEOS-lab 4.36 (default, `compose.integration.yml`) + vEOS-lab 4.36 (opt-in, `compose.veos.yml` — full KVM via `vEOS64-lab-4.36.0.1F.qcow2`) | cEOS-lab healthy, vEOS-lab bring-up gated on `make veos-up`. Both share Arfa forwarding (TOI 17517) — surface parity since 4.35.2F. See `docs/09-emulators.md` for the full target matrix. |
 

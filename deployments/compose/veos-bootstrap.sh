@@ -7,13 +7,13 @@
 #   - 2+ GB RAM, 2+ vCPU (qemu defaults).
 #
 # vEOS-lab management = Ethernet1 in the VM (mapped to first NIC).
-# We expose it on the container's primary interface via slirp /
-# user-mode networking with port redirects so the host can hit
-# http://127.0.0.1:18180/command-api.
+# Exposed on the container's primary interface via slirp /
+# user-mode networking with port redirects; the host reaches eAPI
+# at http://127.0.0.1:18180/command-api.
 set -euo pipefail
 
 # tianon/qemu image already has qemu-system-x86_64 + qemu-img.
-# We only need mtools (for the FAT32 startup-config disk).
+# Only mtools is missing (FAT32 startup-config disk packaging).
 if ! command -v mcopy >/dev/null 2>&1; then
   apt-get update -qq
   apt-get install -qq -y --no-install-recommends mtools dosfstools >/dev/null
@@ -35,7 +35,7 @@ qemu-img create -f qcow2 -F qcow2 -b "$QCOW" "$WORK/disk.qcow2" >/dev/null
 #   * Solution: stage `zerotouch-config` with the literal token
 #     `DISABLE` so first boot exits ZTP immediately.
 #
-# We pack BOTH files (zerotouch-config + startup-config) into a
+# Both files (zerotouch-config + startup-config) are packed into a
 # FAT32 disk image labelled CONFIG. EOS auto-mounts it as
 # /mnt/usb1, then `Aboot` copies any *fresh* startup-config /
 # zerotouch-config into /mnt/flash on first boot.

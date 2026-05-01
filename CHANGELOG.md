@@ -77,8 +77,10 @@ and this project adheres to [Semantic Versioning 2.0.0](https://semver.org/spec/
   rule 2b. Catches silent-no-op bugs that the Go integration body
   intentionally trims for run-time. Make targets: `make probe-audit`,
   `make probe-audit-only ONLY=<X>`, `make probe-audit-lint`,
-  `make probe-audit-fmt`. Last run: 93/94 surface lines accepted
-  across 13 l3 surfaces.
+  `make probe-audit-fmt`. Last run: 95/98 surface lines accepted
+  across 14 l3 surfaces (3 not-OK: 2 PBR FAIL — `set nexthop …
+  recursive` not in EOS 4.36 / `set ipv6 nexthop` wrong syntax;
+  1 PLAT — cEOSLab `tunnel dont-fragment`).
 - Rule 2c in `docs/05-development.md` — cross-resource keyword
   audit on every l3 ship.
 

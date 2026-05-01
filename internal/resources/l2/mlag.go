@@ -285,9 +285,9 @@ func applyMlag(ctx context.Context, args MlagArgs, remove bool) error {
 
 // buildMlagCmds renders the ordered command list.
 //
-// We always negate the existing block first (when not removing) so stale
+// The existing block is always negated first (when not removing) so stale
 // peer-address-heartbeat / dual-primary / reload-delay knobs are
-// guaranteed gone — the same idempotency pattern as
+// guaranteed gone — same idempotency pattern as
 // `eos:l2:EvpnEthernetSegment`.
 func buildMlagCmds(args MlagArgs, remove bool) []string {
 	cmds := []string{"no mlag configuration"}

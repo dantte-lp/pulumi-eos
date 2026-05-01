@@ -8,9 +8,9 @@ import (
 
 // Device.Create / Read run against eAPI; their happy-path is exercised
 // by the integration test (test/integration/device_test.go). Unit-side
-// we pin the documented contract that Delete is a no-op (the resource
-// never owned device state, so refresh / destroy must not mutate the
-// switch) and that error strings used in fact reads compose cleanly.
+// pins: Delete is a no-op (the resource never owned device state, so
+// refresh / destroy must not mutate the switch) and the error strings
+// used in fact reads compose cleanly.
 func TestDevice_Delete_NoOp(t *testing.T) {
 	t.Parallel()
 	r := &Device{}

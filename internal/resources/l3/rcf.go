@@ -441,8 +441,8 @@ func parseRcfSection(out, name string) (rcfRow, bool) {
 }
 
 // rcfHeaderMatch reports whether `line` is the header for `header`.
-// We treat exact match and any prefix that adds ` source ...` as a
-// hit; the caller's CutPrefix decides which form was used.
+// Exact match and any prefix that adds ` source ...` count as a hit;
+// the caller's CutPrefix decides which form was used.
 func rcfHeaderMatch(line, header string) bool {
 	return line == header || strings.HasPrefix(line, header+" ")
 }

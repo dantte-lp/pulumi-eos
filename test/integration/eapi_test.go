@@ -53,7 +53,7 @@ func newTestClient(t *testing.T) *eapi.Client {
 
 // TestEAPI_ShowVersion is the canary integration test. It proves the
 // dev-container test runner can reach the cEOS instance over eAPI and that
-// our goeapi-backed client can decode a structured response.
+// the goeapi-backed client can decode a structured response.
 func TestEAPI_ShowVersion(t *testing.T) {
 	t.Parallel()
 	cli := newTestClient(t)

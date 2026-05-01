@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning 2.0.0](https://semver.org/spec/
 
 ### Added
 
-- `eos:l3:Vrrp` resource v0 (S6, Tier 2 #16, this commit): VRRP
+- `eos:l3:Vrrp` resource v0 (S6, Tier 2 #16, commit `9d28327`): VRRP
   virtual router on an EOS interface, inline-form `vrrp <vrid>
   <subcommand>` per User Manual §17. v0 surface covers identity
   (`interface` + `vrid` PK pair), `virtualAddresses` (IPv4 primary +

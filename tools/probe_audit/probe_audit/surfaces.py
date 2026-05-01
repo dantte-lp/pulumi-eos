@@ -263,6 +263,34 @@ SURFACES: list[Surface] = [
     # coverage requires a physical Arista platform and is tracked
     # under STATUS Open commitments.
     Surface(
+        name="pbr",
+        # PBR fixture: a class-map that matches an ACL,
+        # a policy-map that references the class-map. Probe the
+        # full surface — `set nexthop`, `drop`, recursive,
+        # ip/ipv6, raw match-line — under one policy-map.
+        fixture=[
+            "ip access-list AUDIT_ACL",
+            "permit ip any any",
+            "exit",
+            "class-map type pbr match-any AUDIT_CMAP",
+            "match ip access-group AUDIT_ACL",
+            "exit",
+            "policy-map type pbr AUDIT_PMAP",
+            "class AUDIT_CMAP",
+        ],
+        cleanup=[
+            "no policy-map type pbr AUDIT_PMAP",
+            "no class-map type pbr match-any AUDIT_CMAP",
+            "no ip access-list AUDIT_ACL",
+        ],
+        probes=[
+            "set nexthop 10.0.0.1",
+            "set nexthop 10.0.0.1 recursive",
+            "set ipv6 nexthop 2001:db8::1",
+            "drop",
+        ],
+    ),
+    Surface(
         name="gre_tunnel",
         fixture=["interface Tunnel88"],
         cleanup=["no interface Tunnel88"],

@@ -71,6 +71,7 @@ func New() (provider.Provider, error) {
 			infer.Resource(&l3.GreTunnel{}),
 			infer.Resource(&l3.Vrrp{}),
 			infer.Resource(&l3.ResilientEcmp{}),
+			infer.Resource(&l3.PolicyBasedRouting{}),
 		).
 		WithFunctions(
 			infer.Function(&l2.MacAddressTable{}),

@@ -8,3 +8,12 @@ const (
 	listTypeStandard = "standard"
 	listTypeRegexp   = "regexp"
 )
+
+// EOS interface admin-state keywords. `shutdown` recurs across every
+// resource that owns an interface (l2 Interface, l2 PortChannel, l3
+// Subinterface, l3 RouterOspf, l3 GreTunnel, …). Centralised so the
+// CLI keyword exists in one place.
+const (
+	keywordShutdown   = "shutdown"
+	keywordNoShutdown = "no shutdown"
+)

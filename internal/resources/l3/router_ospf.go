@@ -613,9 +613,9 @@ func appendOspfScalars(cmds []string, args RouterOspfArgs) []string {
 	}
 	if args.Shutdown != nil {
 		if *args.Shutdown {
-			cmds = append(cmds, "shutdown")
+			cmds = append(cmds, keywordShutdown)
 		} else {
-			cmds = append(cmds, "no shutdown")
+			cmds = append(cmds, keywordNoShutdown)
 		}
 	}
 	if args.AutoCostReferenceBandwidth != nil {
@@ -824,10 +824,10 @@ func applyRouterOspfLine(row *routerOspfRow, line string) {
 	switch {
 	case strings.HasPrefix(line, "router-id "):
 		row.RouterID = strings.TrimPrefix(line, "router-id ")
-	case line == "shutdown":
+	case line == keywordShutdown:
 		v := true
 		row.Shutdown = &v
-	case line == "no shutdown":
+	case line == keywordNoShutdown:
 		v := false
 		row.Shutdown = &v
 	case strings.HasPrefix(line, "max-lsa "):

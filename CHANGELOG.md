@@ -9,6 +9,35 @@ and this project adheres to [Semantic Versioning 2.0.0](https://semver.org/spec/
 
 ### Added
 
+- `eos:l3:GreTunnel` resource v0 (S6, Tier 2 #15, this commit):
+  EOS GRE tunnel interface (`interface Tunnel<id>`). v0 surface
+  covers identity (id 0..65535), encapsulation mode (gre |
+  mpls-gre | mpls-over-gre | ipsec), underlay (source / destination
+  IPv4, underlayVrf, tos, key, mssCeiling, pathMtuDiscovery,
+  dontFragment), and overlay (ipAddress CIDR, mtu, vrf, description,
+  shutdown). Render uses simple re-emit (no `default interface`
+  reset) — EOS' session diff applies the minimum delta and the
+  interface does not flap on Update. Optional fields without a value
+  are silently skipped (set to empty string / 0 to emit `no <field>`
+  via Args; the v0 input shape relies on Pulumi's nil-vs-set
+  semantics).
+  Deferred to v1: `tunnel ttl <N>`, `tunnel source <interface>`,
+  `tunnel ipsec profile <name>` (rejected on cEOSLab platform
+  validation; production EOS supports them — Manual §29).
+  Lab quirk: `tunnel dont-fragment` is in the input shape but the
+  integration test does not exercise it because cEOSLab can mark it
+  "Unavailable on this hardware platform" when staged with stale
+  Tunnel<id> session state. Production EOS hardware does not exhibit
+  the issue.
+  Source: EOS User Manual §29 (GRE Tunneling); cEOS 4.36.0.1F live
+  probe (commit `3c13006`); double validation per
+  docs/05-development.md rule 2 + new rule 2b (probes terminate
+  with `commit`, not `abort`).
+- `keywordShutdown` / `keywordNoShutdown` constants in
+  `internal/resources/l3/types.go` to share the `shutdown` /
+  `no shutdown` admin-state CLI keywords across the growing l3
+  resource set (RouterOspf, GreTunnel, Subinterface) per goconst
+  policy.
 - `eos:l3:RouterOspf` resource v0 (S6, Tier 2 #14, commit `a059ec1`):
   EOS OSPFv2 process under `router ospf <instance> [vrf <vrf>]`. v0
   surface covers the day-zero leaf-spine fabric set: process / vrf

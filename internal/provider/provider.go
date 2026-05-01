@@ -68,6 +68,7 @@ func New() (provider.Provider, error) {
 			infer.Resource(&l3.Rcf{}),
 			infer.Resource(&l3.Rpki{}),
 			infer.Resource(&l3.RouterOspf{}),
+			infer.Resource(&l3.GreTunnel{}),
 		).
 		WithFunctions(
 			infer.Function(&l2.MacAddressTable{}),

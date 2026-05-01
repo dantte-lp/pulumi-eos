@@ -269,9 +269,9 @@ func buildSubinterfaceCmds(args SubinterfaceArgs, remove bool) []string {
 			args.Bfd.Interval, args.Bfd.MinRx, args.Bfd.Multiplier))
 	}
 	if args.Shutdown != nil && *args.Shutdown {
-		cmds = append(cmds, "shutdown")
+		cmds = append(cmds, keywordShutdown)
 	} else {
-		cmds = append(cmds, "no shutdown")
+		cmds = append(cmds, keywordNoShutdown)
 	}
 	return cmds
 }
@@ -338,7 +338,7 @@ func parseSubinterfaceConfig(out, name string) subinterfaceRow {
 			if v, err := strconv.Atoi(strings.TrimPrefix(line, "mtu ")); err == nil {
 				row.Mtu = v
 			}
-		case line == "shutdown":
+		case line == keywordShutdown:
 			row.Shutdown = true
 		case strings.HasPrefix(line, "bfd interval "):
 			row.Bfd = parseSubBfdLine(line)

@@ -8,7 +8,7 @@
 |---|---|---|---|
 | Phase 1 — Requirements | S1 | done | `docs/02-implementation-plan.md`, `docs/08-research-references.md` |
 | Phase 2 — Design | S2 — S3 | done (artefacts) | `docs/01-architecture.md`, `docs/03-resource-catalog.md`, `docs/04-provider-config.md` |
-| Phase 3 — Implementation | S4 — S9 | S4 done; S5 implementation done (RC tag pending); S6 in progress (14/18, RoutingPolicy decomposition 5/5 complete, RouterOspf v0 shipped); S7 — S9 pending | per-sprint table below |
+| Phase 3 — Implementation | S4 — S9 | S4 done; S5 implementation done (RC tag pending); S6 in progress (15/18, RoutingPolicy 5/5 complete, RouterOspf + GreTunnel v0 shipped); S7 — S9 pending | per-sprint table below |
 | Phase 4 — Verification | S10 — S11 | pending | — |
 | Phase 5 — Deployment | S12 | pending | — |
 | Phase 6 — Maintenance | continuous | pending | — |
@@ -22,7 +22,7 @@
 | S3 — Detailed design | Resource catalog + field shapes, ADRs | done (catalog), schema gen pending | `docs/03-resource-catalog.md`, `docs/04-provider-config.md` |
 | S4 — Foundation | Provider runtime, eAPI/CVP clients, cEOS integration, CI green; `eos:device:Configlet` lacuna | done | commits `f6ae43f`, `0117e8a`, `6565ccd`, `9fa0b40`, `eb6cdc8`, `98daa9c`, `d661199`, Configlet (`be4d732`) |
 | S5 — L2 family | `Vlan`, `VlanRange`, `VlanInterface`, `Interface`, `PortChannel`, `EvpnEthernetSegment`, `Mlag`, `VxlanInterface`, `MacAddressTable`, `Varp`, `Stp`; `RawCli` escape; minimum gNMI client | implementation done; sprint-exit (RC tag) pending | shipped: `Vlan` (`fa20b40`), `VlanInterface` (`2a77f2e`), `Interface` (`449ea8e`), `PortChannel` + shared `SwitchportFields` (`b516f28`), `VxlanInterface` (`193a4e6`), `EvpnEthernetSegment` (`09dd4f1`), `Mlag` (`b3e2c5d`), `Stp` (`2a64a58`), `Varp` (`726b26c`), `VlanRange` (`5fa01a1`), `RawCli` (`f4adb59`), `MacAddressTable` (`fb0be36`), minimum gNMI client (`363f31e`); 16/16 cEOS integration tests pass (incl. gNMI Capabilities). RC-readiness still open: `schema.json` generation, `pulumi package gen-sdk` × 5, `v0.1.0-rc.1` tag (see Open commitments). |
-| S6 — L3 family | 18 resources after RoutingPolicy decomposition: `Loopback`, `Vrf`, `Bfd`, `Subinterface`, `StaticRoute`, `RouterBgp`, `PrefixList`, `RouteMap`, `CommunityList`, `ExtCommunityList`, `AsPathAccessList`, `Rcf`, `Rpki`, `RouterOspf`, `GreTunnel`, `Vrrp`, `PolicyBasedRouting`, `ResilientEcmp` (see Tier 2 ordering) | in progress (14/18); RoutingPolicy 5/5 done | shipped: `Loopback` (`5dcc4df`), `Vrf` (`c335d22`), `Bfd` (`eea0e74`), `Subinterface` (`8b2dd6e`), `StaticRoute` (`908af76`), `RouterBgp` v0 (`1574102`), `PrefixList` (`11a4cd6`), `RouteMap` (`d50fc2a` + additive-flag fix `72c7db5`), `CommunityList` (`1566544`), `ExtCommunityList` (`51416dc`), `AsPathAccessList` (`888a110`), `Rcf` v1 (`8e02a46`, supersedes v0 `fbdfbb5`), `Rpki` (`1e93356`), `RouterOspf` v0 (`a059ec1`); 31/31 cEOS integration tests pass |
+| S6 — L3 family | 18 resources after RoutingPolicy decomposition: `Loopback`, `Vrf`, `Bfd`, `Subinterface`, `StaticRoute`, `RouterBgp`, `PrefixList`, `RouteMap`, `CommunityList`, `ExtCommunityList`, `AsPathAccessList`, `Rcf`, `Rpki`, `RouterOspf`, `GreTunnel`, `Vrrp`, `PolicyBasedRouting`, `ResilientEcmp` (see Tier 2 ordering) | in progress (15/18); RoutingPolicy 5/5 done | shipped: `Loopback` (`5dcc4df`), `Vrf` (`c335d22`), `Bfd` (`eea0e74`), `Subinterface` (`8b2dd6e`), `StaticRoute` (`908af76`), `RouterBgp` v0 (`1574102`), `PrefixList` (`11a4cd6`), `RouteMap` (`d50fc2a` + additive-flag fix `72c7db5`), `CommunityList` (`1566544`), `ExtCommunityList` (`51416dc`), `AsPathAccessList` (`888a110`), `Rcf` v1 (`8e02a46`, supersedes v0 `fbdfbb5`), `Rpki` (`1e93356`), `RouterOspf` v0 (`a059ec1`), `GreTunnel` v0 (this commit); 32/32 cEOS integration tests pass |
 | S7 — Security / Mgmt / Multicast / QoS | 46 resources across `eos:management` (11), `eos:security` (19), `eos:multicast` (6), `eos:qos` (6) + L2 access (`Dot1x`, `Mab`, `Pvlan`, `StormControl`); see Tier 3a — 3g ordering | pending | — |
 | S8 — CloudVision | `Workspace`, `Studio`, `ChangeControl`, `Configlet`, `Tag`, `Device`, `Inventory`, `ServiceAccount`, `IdentityProvider`, `ImageBundle`, `Compliance`, `Alert` (12 resources); post-S8: `Dashboard`, `Audit` (Tier 4) | pending | — |
 | S9 — Day-2 / gNOI / drift | `OsImage`, `Reboot`, `Certificate` (Tier 5); gNOI client (separate from gNMI); gNMI `Subscribe(last-configuration-timestamp)` drift; `pulumi refresh` accuracy report | pending | — |
@@ -54,13 +54,13 @@ Per-group inventory against `docs/03-resource-catalog.md`:
 |---|---:|---:|---:|---:|---|
 | `eos:device` | 6 | 3 | 3 | 50% | S4 — S9 |
 | `eos:l2` | 16 | 11 | 5 | 69% | S5 — post-S9 |
-| `eos:l3` | 20 | 14 | 6 | 70% | S6 — post-S9 |
+| `eos:l3` | 20 | 15 | 5 | 75% | S6 — post-S9 |
 | `eos:multicast` | 6 | 0 | 6 | 0% | S7 |
 | `eos:security` | 19 (`RouteMap` modeled in `RoutingPolicy`) | 0 | 19 | 0% | S7 |
 | `eos:qos` | 6 | 0 | 6 | 0% | S7 |
 | `eos:management` | 11 | 0 | 11 | 0% | S7 |
 | `eos:cvp` | 14 | 0 | 14 | 0% | S8 — post-S8 |
-| **Total** | **98** | **28** | **70** | **29%** | — |
+| **Total** | **98** | **29** | **69** | **30%** | — |
 
 ## Priority ordering (2026-04-30)
 
@@ -70,7 +70,7 @@ EVPN/VXLAN fabric.
 | Tier | Scope | Resources | Why first |
 |---|---|---|---|
 | ~~**Tier 1 — Close S4 + S5**~~ | ~~`eos:device:Configlet`~~, ~~`eos:device:RawCli`~~, ~~`eos:l2:MacAddressTable`~~, ~~minimum gNMI client~~ — all shipped. | 0 items | Tier 1 closed; v0.1.0-rc.1 unblocked. |
-| **Tier 2 — Open S6 (L3 critical path)** | ~~`Loopback`~~ → ~~`Vrf`~~ → ~~`Bfd`~~ → ~~`Subinterface`~~ → ~~`StaticRoute`~~ → ~~`RouterBgp`~~ (v0) → ~~`PrefixList`~~ → ~~`RouteMap`~~ → ~~`CommunityList`~~ → ~~`ExtCommunityList`~~ → ~~`AsPathAccessList`~~ → ~~`Rcf`~~ v1 → ~~`Rpki`~~ → ~~`RouterOspf`~~ (v0) → `GreTunnel` → `Vrrp` → `PolicyBasedRouting` → `ResilientEcmp`. | 4 items remaining | RouterOspf v0 covers leaf-spine fabric set: process / vrf, networks, areas (stub / nssa / stub-no-summary / nssa-default-information-originate), redistribute, passive-interface, distance, default-information-originate, summary-address, log-adjacency-changes, max-lsa, maximum-paths, timers (spf delay initial / out-delay / pacing flood), graceful-restart-helper. Deferred to v1 (probe-rejected on cEOS 4.36): `area X nssa no-redistribution`, mixed `nssa no-summary default-information-originate`, `bfd all-interfaces`, `graceful-restart restart-period`, `area virtual-link`, OSPFv3. |
+| **Tier 2 — Open S6 (L3 critical path)** | ~~`Loopback`~~ → ~~`Vrf`~~ → ~~`Bfd`~~ → ~~`Subinterface`~~ → ~~`StaticRoute`~~ → ~~`RouterBgp`~~ (v0) → ~~`PrefixList`~~ → ~~`RouteMap`~~ → ~~`CommunityList`~~ → ~~`ExtCommunityList`~~ → ~~`AsPathAccessList`~~ → ~~`Rcf`~~ v1 → ~~`Rpki`~~ → ~~`RouterOspf`~~ (v0) → ~~`GreTunnel`~~ (v0) → `Vrrp` → `PolicyBasedRouting` → `ResilientEcmp`. | 3 items remaining | GreTunnel v0 covers `interface Tunnel<id>` with mode (gre / mpls-gre / mpls-over-gre / ipsec), source / destination IPv4, underlayVrf, tos, key, mssCeiling, pathMtuDiscovery, dontFragment (input-shape only — see lab-quirk note), ipAddress, mtu, vrf, description, shutdown. Deferred to v1: `tunnel ttl <N>` (rejected on cEOSLab), `tunnel source <interface>` (rejected on cEOSLab — only IPv4 source), `tunnel ipsec profile` (depends on `eos:security:IpsecProfile`). |
 | **Tier 3a — S7 management bootstrap** | `Hostname`, `ManagementInterface`, `NtpServer`, `DnsServer`, `Logging`, `EApi`. | 6 items | Required day-zero on every device; trivial shape; enables all subsequent S7 work to drive a real device through Pulumi. |
 | **Tier 3b — S7 security core** | `IpAccessList`, `Ipv6AccessList`, `MacAccessList`, `RoleBasedAccessList`, `UserAccount`, `Role`, `AaaServer`, `AaaAuthentication`, `SslProfile`, `ControlPlanePolicing`, `Urpf`, `ServiceAcl`. | 12 items | Control plane and data-plane policy. ACLs are referenced by routing-policy, PBR, and CoPP, so they unlock cross-resource composition. |
 | **Tier 3c — S7 access-edge (campus)** | `Dot1x`, `Mab`, `Pvlan`, `StormControl`, `DhcpRelay`, `DhcpSnooping`, `DynamicArpInspection`, `IpSourceGuard`, `ArpRateLimit`. | 9 items | Campus / access-layer. Independent of the spine/leaf path. |
@@ -106,6 +106,7 @@ EVPN/VXLAN fabric.
 
 | Commit | Subject | Date |
 |---|---|---|
+| `<this>` | `feat(l3): eos:l3:GreTunnel v0 — GRE tunnel interface` | 2026-05-01 |
 | `a059ec1` | `feat(l3): eos:l3:RouterOspf v0 — OSPFv2 process` | 2026-05-01 |
 | `9d87fc2` | `test(device): add eos:device:Device unit + integration tests` | 2026-05-01 |
 | `c69195d` | `fix(lint): extract listType constants; cspell add nssa/ospfv` | 2026-05-01 |

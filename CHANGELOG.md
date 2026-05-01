@@ -9,6 +9,19 @@ and this project adheres to [Semantic Versioning 2.0.0](https://semver.org/spec/
 
 ### Added
 
+- `eos:l3:ResilientEcmp` resource v0 (S6, Tier 2 #17 — dependency-
+  reordered, commit `e6606fe`): EOS resilient-ECMP slot-table
+  binding. Top-level `[ip|ipv6] hardware fib ecmp resilience
+  <prefix> capacity N redundancy M [ordered]` per Manual
+  §14.1.14.54 + TOI 13938 + TOI 15844. v0 surface: prefix (PK,
+  IPv4/IPv6), ipFamily (PK, derived from prefix or explicit),
+  capacity, redundancy, ordered. Per-platform maxima documented
+  in the resource doc; validator caps at the most permissive
+  hardware limit and surfaces stricter limits at commit time.
+  Platform-only — cEOSLab returns "Unavailable command";
+  production EOS DCS-7050/7160/7280/73xx/75xx/78xx accepts
+  directly. Integration body skipped (no live coverage until
+  S10 matrix-test stage adds a hardware-class fixture).
 - Python probe-audit harness under `tools/probe_audit/` (commit
   `8d7ea48`): stdlib-only Python (uv + ruff + ty) that drives every
   l3 resource's full Args-render surface against live cEOS via

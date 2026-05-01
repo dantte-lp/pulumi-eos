@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning 2.0.0](https://semver.org/spec/
 
 ### Added
 
-- `eos:l3:RouterOspf` resource v0 (S6, Tier 2 #14, this commit):
+- `eos:l3:RouterOspf` resource v0 (S6, Tier 2 #14, commit `a059ec1`):
   EOS OSPFv2 process under `router ospf <instance> [vrf <vrf>]`. v0
   surface covers the day-zero leaf-spine fabric set: process / vrf
   identity, routerId, shutdown, maxLsa, maximumPaths,

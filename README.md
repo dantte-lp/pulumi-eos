@@ -74,12 +74,13 @@ pulumi plugin install resource eos
 ### Build from source
 
 ```bash
-make up        # start dev container (podman-compose)
-make build     # build pulumi-resource-eos
-make test      # run Go tests with race detector
-make lint      # golangci-lint v2 (full set)
-make lint-docs # markdownlint-cli2 + mermaid + yamllint + cspell
-make sdks      # generate Go / Python / TypeScript / .NET / Java SDKs
+make up           # start dev container (podman-compose)
+make build        # build pulumi-resource-eos
+make test         # run Go tests with race detector
+make lint         # golangci-lint v2 (full set)
+make lint-docs    # markdownlint-cli2 + mermaid + yamllint + cspell + lint-probes
+make probe-audit  # cross-resource CLI keyword audit (Python uv + ruff + ty)
+make sdks         # generate Go / Python / TypeScript / .NET / Java SDKs
 ```
 
 ## Documentation
@@ -94,6 +95,8 @@ make sdks      # generate Go / Python / TypeScript / .NET / Java SDKs
 | Testing | [`docs/06-testing.md`](docs/06-testing.md) |
 | Release | [`docs/07-release.md`](docs/07-release.md) |
 | Research references | [`docs/08-research-references.md`](docs/08-research-references.md) |
+| Live status | [`docs/STATUS.md`](docs/STATUS.md) |
+| Probe-audit (Python) | [`tools/probe_audit/README.md`](tools/probe_audit/README.md) |
 
 ## License
 

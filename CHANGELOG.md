@@ -9,6 +9,18 @@ and this project adheres to [Semantic Versioning 2.0.0](https://semver.org/spec/
 
 ### Added
 
+- Python probe-audit harness under `tools/probe_audit/` (commit
+  `8d7ea48`): stdlib-only Python (uv + ruff + ty) that drives every
+  l3 resource's full Args-render surface against live cEOS via
+  direct eAPI, commit-terminated per probe per docs/05-development.md
+  rule 2b. Catches silent-no-op bugs that the Go integration body
+  intentionally trims for run-time. Make targets: `make probe-audit`,
+  `make probe-audit-only ONLY=<X>`, `make probe-audit-lint`,
+  `make probe-audit-fmt`. Last run: 93/94 surface lines accepted
+  across 13 l3 surfaces.
+- Rule 2c in `docs/05-development.md` — cross-resource keyword
+  audit on every l3 ship.
+
 - `eos:l3:Vrrp` resource v0 (S6, Tier 2 #16, commit `9d28327`): VRRP
   virtual router on an EOS interface, inline-form `vrrp <vrid>
   <subcommand>` per User Manual §17. v0 surface covers identity
@@ -392,6 +404,13 @@ and this project adheres to [Semantic Versioning 2.0.0](https://semver.org/spec/
 
 ### Removed
 
+- `eos:l3:RouteMap` `Match.Origin` field (commit `8d7ea48`). EOS
+  does not accept `match origin igp|egp|incomplete` — the keyword
+  is rejected with "Incomplete token" by every cEOS variant.
+  The Cisco IOS-style `match origin` clause has no EOS equivalent;
+  use `match route-type internal|external|local|confederation-
+  external` (TOI 13916) for routing-source filtering. The
+  `set origin` path is unaffected.
 - `cmd/pulumi-eos-gen` placeholder binary. Will be reintroduced as a
   fully-implemented tool when SDK / schema generation enters the active
   sprint.
@@ -403,6 +422,12 @@ and this project adheres to [Semantic Versioning 2.0.0](https://semver.org/spec/
 
 ### Changed
 
+- `eos:l3:GreTunnel` mode set narrowed from
+  `{gre, mpls-gre, mpls-over-gre, ipsec}` to `{gre, ipsec}` (commit
+  `8d7ea48`). cEOSLab rejects `mpls-gre` and `mpls-over-gre` at
+  commit (TOI 18464 — pseudowire modes require MPLS fabric
+  context). A future `eos:l3:GreTunnelMpls` resource will model the
+  pseudowire surface alongside MPLS forwarding pieces.
 - 7-standards audit (commit `cabe86c`): close the
   Keep-a-Changelog 1.1.0 + Conventional Commits 1.0.0 +
   containers.conf.5 audit. CHANGELOG re-aligned to actual repo

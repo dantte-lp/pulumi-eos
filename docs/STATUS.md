@@ -41,10 +41,13 @@
 | SAST | `gosec` embedded in golangci-lint (`severity: low`, `confidence: low`, `audit: true`); `semgrep p/golang` available host-side via `make semgrep` | clean |
 | Vulnerability | `govulncheck v1.2.0` + `osv-scanner v2.3.5` | no vulnerabilities |
 | Markdown | `markdownlint-cli2` | 0 errors |
-| Mermaid | `@mermaid-js/mermaid-cli` (`mmdc`) render | 5 diagrams parsed, 0 failures |
+| Mermaid | `@mermaid-js/mermaid-cli` (`mmdc`) render | 6 diagrams parsed, 0 failures |
 | YAML | `yamllint` | clean |
 | Spelling | `cspell` | clean |
 | LSP | `gopls v0.21.1` | references resolve across packages |
+| Probe rule 2b | `scripts/lint-probes.sh` | clean (no direct `Abort` in probe files) |
+| Cross-resource keyword audit | `make probe-audit` — Python harness under `tools/probe_audit/` (uv + ruff + ty) | last run: 93/94 lines accepted across 13 l3 surfaces; only cEOSLab `tunnel dont-fragment` PLAT (already documented). Caught + closed: `RouteMap.Match.Origin`, `GreTunnel.Mode={mpls-gre,mpls-over-gre}` (commit `8d7ea48`). |
+| Python lint (audit harness) | `ruff check` + `ruff format --check` + `ty check` | clean |
 
 ## Group readiness
 
@@ -108,6 +111,7 @@ EVPN/VXLAN fabric.
 
 | Commit | Subject | Date |
 |---|---|---|
+| `8d7ea48` | `build(audit): Python probe-audit harness; close 2 EOS-keyword bugs` | 2026-05-01 |
 | `9d28327` | `feat(l3): eos:l3:Vrrp v0 — VRRP virtual router (inline form)` | 2026-05-01 |
 | `d2ee58a` | `feat(l3): eos:l3:GreTunnel v0 — GRE tunnel interface` | 2026-05-01 |
 | `a059ec1` | `feat(l3): eos:l3:RouterOspf v0 — OSPFv2 process` | 2026-05-01 |

@@ -109,7 +109,10 @@ func (r *Rpki) Annotate(a infer.Annotator) {
 	a.Describe(&r, "An EOS RPKI ROA cache configured under `router bgp <asn> / rpki cache <name>`. Independent of eos:l3:RouterBgp — multiple caches per ASN supported.")
 }
 
-// Annotate documents RpkiArgs fields.
+// Annotate documents RpkiArgs fields. Structurally similar to
+// VrrpArgs.Annotate but per-resource semantics differ — see vrrp.go.
+//
+//nolint:dupl // see comment above
 func (a *RpkiArgs) Annotate(an infer.Annotator) {
 	an.Describe(&a.Name, "Cache name (PK). Must match [A-Za-z][A-Za-z0-9_-]*.")
 	an.Describe(&a.BgpAsn, "BGP ASN this cache binds to (1..4294967295). Together with name, forms the resource identity.")

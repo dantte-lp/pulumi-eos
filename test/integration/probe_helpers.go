@@ -19,6 +19,7 @@ package integration
 import (
 	"context"
 	"strings"
+	"sync/atomic"
 	"testing"
 
 	"github.com/dantte-lp/pulumi-eos/internal/client/eapi"
@@ -155,13 +156,24 @@ func ProbeFullBody(
 	return captured
 }
 
+// cleanupCounter is a per-process monotonic source for unique cleanup
+// session names. EOS keeps a `Maximum number of completed sessions`
+// (default 1) — reusing the same cleanup-session name across many
+// probes pushes earlier completed sessions out of that retention
+// queue and confuses subsequent `configure session <name>` opens
+// (cEOS returns generic JSON Error(1002) without a message).
+var cleanupCounter atomic.Uint64
+
 // runCleanup commits the cleanup body in its own session. Failures
-// are swallowed — cleanup is best-effort.
+// are swallowed — cleanup is best-effort. The session name is unique
+// per call so completed-session retention does not collide.
 func runCleanup(ctx context.Context, cli *eapi.Client, cleanup []string) {
 	if len(cleanup) == 0 {
 		return
 	}
-	sess, err := cli.OpenSession(ctx, "probe-cleanup")
+	n := cleanupCounter.Add(1)
+	sname := "probe-cleanup-" + intToA(int(n))
+	sess, err := cli.OpenSession(ctx, sname)
 	if err != nil {
 		return
 	}

@@ -9,6 +9,28 @@ and this project adheres to [Semantic Versioning 2.0.0](https://semver.org/spec/
 
 ### Added
 
+- `eos:l3:Vrrp` resource v0 (S6, Tier 2 #16, this commit): VRRP
+  virtual router on an EOS interface, inline-form `vrrp <vrid>
+  <subcommand>` per User Manual §17. v0 surface covers identity
+  (`interface` + `vrid` PK pair), `virtualAddresses` (IPv4 primary +
+  `secondary` IPv4s + IPv6), `priority` (renders as
+  `priority-level`), `preempt` + `preemptDelayMinimum`,
+  `timersAdvertise` (renders as `advertisement interval`),
+  `description` (renders as `session description`), `bfdPeer`
+  (renders as `bfd ip`), `shutdown` (renders as `disabled`).
+  EOS keyword corrections caught at integration time and noted in
+  the resource's package comment + parser (legacy forms retained
+  for forward-compat parsing). `tracks` is part of the input shape
+  but only renders when an `eos:l3:Tracker` resource is shipped
+  (S6 close-out follow-up — the EOS keyword is `tracked-object
+  <NAME>` against the global `track` namespace, not an interface
+  name).
+- Probe-rule lessons (rule 2b reinforcement): all per-keyword
+  corrections above were caught only after switching probes from
+  `Abort`-terminated to the rule-2b helpers
+  (`ProbeOnePerCmd` / `ProbeFullBody`). Documented inline in
+  `internal/resources/l3/vrrp.go` so future audits can trace each
+  keyword to the §-reference that justified it.
 - `eos:l3:GreTunnel` resource v0 (S6, Tier 2 #15, commit `d2ee58a`):
   EOS GRE tunnel interface (`interface Tunnel<id>`). v0 surface
   covers identity (id 0..65535), encapsulation mode (gre |

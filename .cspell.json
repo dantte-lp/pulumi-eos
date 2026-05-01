@@ -120,6 +120,8 @@
     "auditor",
     "untrusted",
     "auditable",
+    "recmp",
+    "ecmp",
     "vrfs",
     "vteps",
     "oneline",

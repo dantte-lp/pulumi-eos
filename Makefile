@@ -23,7 +23,7 @@ REPORT_DIR := reports
 .PHONY: help all up down restart logs shell \
         build build-provider build-all \
         test test-v test-run test-integration test-acceptance fuzz coverage coverage-func test-report \
-        lint lint-fix lint-md lint-mmd lint-yaml lint-spell lint-docs \
+        lint lint-fix lint-md lint-mmd lint-yaml lint-spell lint-probes lint-docs \
         semgrep vulncheck vulncheck-strict osv-scan osv-scan-strict \
         sdks schema schema-validate \
         tidy download \
@@ -191,7 +191,16 @@ lint-yaml:
 lint-spell:
 	$(EXEC) cspell --no-progress --no-summary --config .cspell.json "**/*.md" "**/*.go" "**/*.yaml" "**/*.yml"
 
-lint-docs: lint-md lint-mmd lint-yaml lint-spell
+# lint-probes enforces docs/05-development.md rule 2b on probe files
+# (`probe_<x>_test.go` under //go:build integration && probe). Every
+# probe must terminate with commit, not abort — abort-only probes
+# silently mark hardware-platform-unsupported commands as OK and ship
+# them into resources that then fail at runtime (cEOSLab `tunnel
+# dont-fragment` was caught this way; see commit `d2ee58a`).
+lint-probes:
+	bash scripts/lint-probes.sh
+
+lint-docs: lint-md lint-mmd lint-yaml lint-spell lint-probes
 
 # === Deps ===
 

@@ -134,6 +134,9 @@ jobs:
       - name: cspell
         run: cspell --no-progress --no-summary --config .cspell.json "**/*.md" "**/*.go"
 
+      - name: probe-rule check (rule 2b)
+        run: bash scripts/lint-probes.sh
+
   vulncheck:
     name: Vulnerability audit
     runs-on: ubuntu-latest

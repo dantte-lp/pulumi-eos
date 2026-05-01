@@ -262,23 +262,30 @@ matrix. Known gaps observed in production hardware:
 graph LR
   Device[Device] --> Iface[Interface]
   Iface --> PC[PortChannel]
-  Iface --> Sub[Sub-Interface]
+  Iface --> Sub[Subinterface]
   PC --> ESI[EvpnEthernetSegment]
   Iface --> MacBind[MacSecBinding]
   MacBind --> MacProf[MacSecProfile]
   Vrf[Vrf] --> SVI[VlanInterface]
   Vrf --> RouterBgpVrf[RouterBgp · VRF]
+  Vrf --> RouterOspfVrf[RouterOspf · VRF]
   Vlan[Vlan] --> SVI
   Vlan --> Vxlan[VxlanInterface]
   Vrf --> Vxlan
   Loopback[Loopback] --> RouterBgp[RouterBgp]
-  RouterBgp --> RoutingPolicy[RoutingPolicy]
+  Loopback --> RouterOspf[RouterOspf]
+  Loopback --> GreTunnel[GreTunnel]
+  Vrf --> GreTunnel
+  RouterBgp --> RouteMap[RouteMap]
   RouterBgp --> Rcf[Rcf]
   RouterBgp --> Bfd[Bfd]
   RouterBgp --> Rpki[Rpki]
-  RoutingPolicy --> CommunityList[CommunityList]
-  RoutingPolicy --> PrefixList[PrefixList]
-  RoutingPolicy --> AsPathList[AsPathList]
+  RouterOspf --> RouteMap
+  RouterOspf --> Bfd
+  RouteMap --> CommunityList[CommunityList]
+  RouteMap --> ExtCommunityList[ExtCommunityList]
+  RouteMap --> PrefixList[PrefixList]
+  RouteMap --> AsPathAccessList[AsPathAccessList]
 ```
 
 ## Out-of-scope for v1.0

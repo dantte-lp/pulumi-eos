@@ -1,30 +1,32 @@
 //go:build integration && probe
 
-// Probe utilities for OSPF surface discovery. Run only on demand:
+// OSPF probe — uses the shared `ProbeOnePerCmd` / `ProbeFullBody`
+// helpers (probe_helpers.go) which enforce rule 2b: every probe
+// terminates with `commit`, not `abort`. EOS only triggers full
+// hardware-platform validation on commit, so abort-only probes can
+// silently mark unsupported commands as OK.
+//
+// Run on demand:
 //
 //	go test -tags="integration probe" -run TestProbe_Ospf -v ./test/integration/...
-//
-// Shares newTestClient with the integration suite so the discovery path
-// is identical to the runtime/production path. Per docs/05-development.md
-// rule 2a, this is the only sanctioned way to inspect cEOS CLI surface.
+
 package integration
 
 import (
 	"context"
 	"fmt"
-	"strings"
 	"testing"
 	"time"
 )
 
 func TestProbe_Ospf(t *testing.T) {
 	cli := newTestClient(t)
-	ctx, cancel := context.WithTimeout(context.Background(), 120*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 240*time.Second)
 	defer cancel()
 
+	cleanup := []string{"no router ospf 1", "no ip routing"}
+
 	probes := []string{
-		"ip routing",
-		"router ospf 1",
 		"router-id 1.1.1.1",
 		"max-lsa 12000",
 		"timers spf delay initial 50 200 5000",
@@ -58,108 +60,40 @@ func TestProbe_Ospf(t *testing.T) {
 		"area 0 range 10.0.0.0/16",
 	}
 
-	type result struct {
-		cmd string
-		ok  bool
-		err string
-	}
-	var results []result
+	results := ProbeOnePerCmd(t, cli, ctx, "probe-ospf",
+		[]string{"ip routing", "router ospf 1"},
+		cleanup,
+		probes,
+	)
 
-	// Per-command probe: open ephemeral session, stage one cmd, abort.
-	for _, c := range probes {
-		sess, err := cli.OpenSession(ctx, "probe-ospf-cmd")
-		if err != nil {
-			t.Fatalf("OpenSession: %v", err)
-		}
-		// Always need router ospf 1 context for child cmds; "ip routing"
-		// is global so handled separately.
-		var stageCmds []string
-		switch {
-		case c == "ip routing", c == "router ospf 1":
-			stageCmds = []string{c}
-		default:
-			stageCmds = []string{"ip routing", "router ospf 1", c}
-		}
-		stageErr := sess.Stage(ctx, stageCmds)
-		_ = sess.Abort(ctx)
-		if stageErr != nil {
-			results = append(results, result{cmd: c, ok: false, err: stageErr.Error()})
-		} else {
-			results = append(results, result{cmd: c, ok: true})
-		}
-	}
-
-	t.Log("---- per-command probe results ----")
+	t.Log("---- per-command probe results (commit-terminated) ----")
 	for _, r := range results {
-		if r.ok {
-			t.Logf("OK : %s", r.cmd)
+		if r.OK {
+			t.Logf("OK : %s", r.Cmd)
 		} else {
-			msg := r.err
+			msg := r.Err
 			if len(msg) > 200 {
 				msg = msg[:200]
 			}
-			t.Logf("ERR: %s\n     -> %s", r.cmd, msg)
+			t.Logf("ERR: %s\n     -> %s", r.Cmd, msg)
 		}
 	}
 
-	// Stage all OK ones together, commit, dump running-config and full
-	// section, abort cleanup.
-	sess, err := cli.OpenSession(ctx, "probe-ospf-full")
-	if err != nil {
-		t.Fatalf("OpenSession full: %v", err)
-	}
+	// Compose the full OK-set into one commit and capture the
+	// running-config canonical render. Idempotency is checked inside
+	// the helper.
 	full := []string{"ip routing", "router ospf 1"}
 	for _, r := range results {
-		if r.ok && r.cmd != "ip routing" && r.cmd != "router ospf 1" {
-			full = append(full, r.cmd)
+		if r.OK {
+			full = append(full, r.Cmd)
 		}
 	}
-	if err := sess.Stage(ctx, full); err != nil {
-		t.Fatalf("Stage full: %v", err)
-	}
-	if err := sess.Commit(ctx); err != nil {
-		t.Fatalf("Commit full: %v", err)
-	}
-
-	for _, view := range []string{
-		"show running-config section ospf",
-		"show running-config all section ospf",
-	} {
-		res, err := cli.RunCmds(ctx, []string{view}, "text")
-		if err != nil {
-			t.Fatalf("%s: %v", view, err)
-		}
-		var body string
-		if len(res) > 0 {
-			if v, ok := res[0]["output"].(string); ok {
-				body = v
-			}
-		}
-		fmt.Printf("==== %s ====\n%s\n", view, strings.TrimSpace(body))
-	}
-
-	// Idempotency check: re-staging the same body must commit cleanly
-	// and leave running-config unchanged.
-	sess2, err := cli.OpenSession(ctx, "probe-ospf-idem")
-	if err != nil {
-		t.Fatalf("OpenSession idem: %v", err)
-	}
-	if err := sess2.Stage(ctx, full); err != nil {
-		t.Fatalf("Stage idem: %v", err)
-	}
-	if err := sess2.Commit(ctx); err != nil {
-		t.Fatalf("Commit idem: %v", err)
-	}
-
-	// Cleanup: remove ospf and ip routing.
-	cleanup, err := cli.OpenSession(ctx, "probe-ospf-cleanup")
-	if err != nil {
-		t.Fatalf("OpenSession cleanup: %v", err)
-	}
-	if err := cleanup.Stage(ctx, []string{"no router ospf 1", "no ip routing"}); err != nil {
-		t.Logf("cleanup stage: %v", err)
-	}
-	if err := cleanup.Commit(ctx); err != nil {
-		t.Logf("cleanup commit: %v", err)
+	captured := ProbeFullBody(t, cli, ctx, "probe-ospf-full", full, cleanup,
+		[]string{
+			"show running-config section ospf",
+			"show running-config all section ospf",
+		})
+	for view, body := range captured {
+		fmt.Printf("==== %s ====\n%s\n", view, body)
 	}
 }

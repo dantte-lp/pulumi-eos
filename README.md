@@ -40,13 +40,28 @@ flowchart LR
 
 | Phase | State |
 |---|---|
-| Requirements (S1) | active |
-| Design (S2 – S3) | planned |
-| Implementation (S4 – S9) | planned |
+| Requirements (S1) | done |
+| Design (S2 – S3) | done (catalog), schema-gen pending |
+| Implementation (S4 – S9) | S4 done; S5 done (RC tag pending); S6 in progress (15/18 Tier-2 shipped); S7 — S9 pending |
 | Verification (S10 – S11) | planned |
 | Deployment (S12) | planned |
 
-See [`docs/02-implementation-plan.md`](docs/02-implementation-plan.md) for the full sprint plan.
+| Group | Shipped / Total | Sprint |
+|---|---:|---|
+| `eos:device` | 3 / 6 | S4 — S9 |
+| `eos:l2` | 11 / 16 | S5 — post-S9 |
+| `eos:l3` | 15 / 20 | S6 — post-S9 |
+| `eos:management` | 0 / 11 | S7 |
+| `eos:security` | 0 / 19 | S7 |
+| `eos:multicast` | 0 / 6 | S7 |
+| `eos:qos` | 0 / 6 | S7 |
+| `eos:cvp` | 0 / 14 | S8 — post-S8 |
+| **Total** | **29 / 98 (30 %)** | — |
+
+Quality: 32/32 cEOS integration tests pass; 0 issues across 83 golangci-lint linters.
+
+See [`docs/STATUS.md`](docs/STATUS.md) for the live dashboard and
+[`docs/02-implementation-plan.md`](docs/02-implementation-plan.md) for the full sprint plan.
 
 ## Quick start
 

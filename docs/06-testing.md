@@ -54,7 +54,7 @@ Go integration body intentionally trims away.
 |---|---|
 | eAPI | net/http test server replaying recorded JSON-RPC responses. |
 | gNMI | embedded `openconfig/gnmi`-test server. |
-| CVP | in-process gRPC server implementing the subset of Resource APIs we depend on. |
+| CVP | in-process gRPC server implementing the subset of Resource APIs the provider consumes. |
 
 ## CI matrix
 

@@ -15,7 +15,7 @@
 | `slog.NewMultiHandler` | Compose multiple sinks | When provider grows multiple log destinations (file + stderr + journald). |
 | `reflect.Type.Fields()` / `.Methods()` / `.Ins()` / `.Outs()` | Iterators over reflection lists | Use only in codegen / schema tooling, never in CRUD hot paths. |
 | `os/signal.NotifyContext` returning cancel cause + signal error | Provider main and long-running ops | Surfaces the actual signal in graceful-shutdown logs. |
-| `t.ArtifactDir()` + `-artifacts` flag | Persisting test artefacts (cEOS configs, captures) | Replaces `t.TempDir()` for things we want kept on CI runs. |
+| `t.ArtifactDir()` + `-artifacts` flag | Persisting test artefacts (cEOS configs, captures) | Replaces `t.TempDir()` when artefacts must survive the CI run. |
 
 ## 2. Antipatterns banned in this codebase
 
@@ -65,18 +65,18 @@
 | Heap address randomization | enabled (default) | Mitigates info-leak attack classes. |
 | Goroutine leak profile | enabled in dev container only via `GOEXPERIMENT=goroutineleakprofile` | Diagnostics for the eAPI session semaphore and gRPC clients. |
 | `GOFLAGS` | `-buildvcs=false` | Reproducible builds inside the dev container. |
-| `GOTOOLCHAIN` | system default | We pin via `go 1.26.2` directive in `go.mod`. |
-| Linker | external for cgo where required (we are CGO_ENABLED=0) | Static binary for `pulumi-resource-eos`. |
+| `GOTOOLCHAIN` | system default | Pinned via the `go 1.26.2` directive in `go.mod`. |
+| Linker | external for cgo where required (`CGO_ENABLED=0`) | Static binary for `pulumi-resource-eos`. |
 
 ## 5. Cryptography & TLS
 
 | Decision | Citation |
 |---|---|
-| `crypto/rand` only for any secret. | Go 1.26 ignores user-supplied `random` parameter in `crypto/{ecdsa,ed25519,rsa,ecdh,dsa}`. |
+| `crypto/rand` only for any secret. | Go 1.26 ignores the caller-passed `random` parameter in `crypto/{ecdsa,ed25519,rsa,ecdh,dsa}`. |
 | Deterministic crypto tests via `testing/cryptotest.SetGlobalRandom()`. | Replaces ad-hoc `rand.Reader` mocks. |
-| TLS post-quantum hybrids: leave defaults on. | `tls.SecP256r1MLKEM768` enabled by default; we do not override `CurvePreferences`. |
+| TLS post-quantum hybrids: leave defaults on. | `tls.SecP256r1MLKEM768` enabled by default; `CurvePreferences` is not overridden. |
 | Minimum TLS version: 1.3 (`internal/client/cvp` enforces `tls.VersionTLS13`). | Mandatory per `SECURITY.md`. |
-| Certificate pinning: PEM bundle via `Config.CACertPEM`. | We do not use `InsecureSkipVerify`. |
+| Certificate pinning: PEM bundle via `Config.CACertPEM`. | `InsecureSkipVerify` is banned. |
 | HKE: `crypto/hpke` available if the provider ever needs hybrid public-key encryption (CVP token escrow scenarios). | Reserved for future. |
 
 ## 6. Standard-library upgrade map (per-package)
@@ -100,7 +100,7 @@ Where the project already uses (or should use) a Go 1.26 idiom:
 | `go` | 1.26.2 | language, module, build |
 | `gofmt` / `gofumpt` / `goimports` | bundled / latest | format gate (`golangci-lint formatters`) |
 | `golangci-lint` | `v2.11.4` | aggregate linter; allowlist mode |
-| `go fix` | bundled (revamped in 1.26) | dry-run only — we drive modernization through golangci-lint's `modernize` linter, not `go fix --apply` |
+| `go fix` | bundled (revamped in 1.26) | dry-run only — modernization is driven through golangci-lint's `modernize` linter, not `go fix --apply` |
 | `gopls` | `v0.21.1` | LSP; project-wide references / rename / find-symbol |
 | `govulncheck` | `v1.2.0` | CI gate |
 | `osv-scanner` | `v2.3.5` | CI gate |
@@ -123,6 +123,6 @@ Where the project already uses (or should use) a Go 1.26 idiom:
 
 - [Go 1.26 release notes](https://go.dev/doc/go1.26) — authoritative.
 - [Go 1.26 godebug history](https://pkg.go.dev/runtime#hdr-Environment_Variables) — runtime opt-outs.
-- [`golangci-lint` `modernize` linter](https://golangci-lint.run/usage/linters/#modernize) — what auto-modernization triggers we accept.
+- [`golangci-lint` `modernize` linter](https://golangci-lint.run/usage/linters/#modernize) — list of accepted auto-modernization triggers.
 - [Effective Go](https://go.dev/doc/effective_go) — still the baseline style guide; supersedes nothing in §1–§3.
 - [Go Memory Model](https://go.go.dev/ref/mem) — required for any patch touching concurrency primitives.

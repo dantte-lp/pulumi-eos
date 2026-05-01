@@ -29,17 +29,17 @@ them is operational, not technical:
 
 Hardware-conditional features (IPsec, MPLS-over-GRE, resilient ECMP,
 subinterface MTU, RPKI TLS) only validate live on production
-DCS-7280R3A/3 family or equivalent. We track them as `input-shape`
+DCS-7280R3A/3 family or equivalent. Modelled as `input-shape`
 resources with documenting Annotate strings; live integration
-coverage will land in the **S10 matrix-test stage** when we wire a
+coverage lands in the **S10 matrix-test stage** with a
 hardware-class fixture.
 
 ## Tooling — `eos-downloader` (`ardl`)
 
-We use [titom73/eos-downloader](https://github.com/titom73/eos-downloader)
-to pull cEOS / vEOS / CVP images from the Arista support portal. The
+[titom73/eos-downloader](https://github.com/titom73/eos-downloader)
+pulls cEOS / vEOS / CVP images from the Arista support portal. The
 CLI is uv-installed in the dev container; auth via `ARISTA_TOKEN`
-env-var (rotate after every chat session — never commit).
+env-var (rotate per session; never commit).
 
 ```bash
 podman exec -e ARISTA_TOKEN="…" pulumi-eos-dev \
@@ -53,9 +53,9 @@ Supported image types (per `eos_downloader/models/data.py`):
 | Format | Filename | Use |
 |---|---|---|
 | `cEOS` (32-bit) | `cEOS-lab-X.Y.Z.tar.xz` | docker import |
-| `cEOS64` | `cEOS64-lab-X.Y.Z.tar.xz` | docker import (we use this) |
+| `cEOS64` | `cEOS64-lab-X.Y.Z.tar.xz` | docker import (default cEOS-lab target) |
 | `vEOS-lab` | `vEOS-lab-X.Y.Z.vmdk` | VMware / vrnetlab |
-| `vEOS64-lab-qcow2` | `vEOS64-lab-X.Y.Z.qcow2` | qemu/KVM (we use this) |
+| `vEOS64-lab-qcow2` | `vEOS64-lab-X.Y.Z.qcow2` | qemu/KVM (default vEOS-lab target) |
 | `vEOS64-lab-swi` | `vEOS64-lab-X.Y.Z.swi` | onie / BoxBoot |
 | `64` | `EOS64-X.Y.Z.swi` | physical hardware |
 
@@ -72,8 +72,8 @@ docs / 117 940 chunks):
   the eAPI ground-truth reference. Use this when authoring or
   changing anything in `internal/client/eapi/`.
 - `EOS USER GUIDE` (`document_id: 597d6e05e564a54a`) — full CLI
-  reference (≥ 4 000 sections); the §-numbers cited throughout
-  pulumi-eos resources point here.
+  reference (≥ 4 000 sections); §-numbers cited throughout
+  pulumi-eos resources resolve against this document.
 - 2 400+ TOIs (one per feature) — e.g. TOI 17517 (Arfa), TOI 13938
   (Resilient ECMP), TOI 14470 (RPKI), TOI 14271 (GRE Tunnel),
   TOI 13916 (RouteMap match route-type).
@@ -99,29 +99,25 @@ code drives both.
 
 ### vEOS bring-up
 
-The user-supplied `EOS-4.36.0.1F.tar` archive (8 GB, extracted to
-`/opt/software/arista-extracted/EOS-4.36.0.1F/` outside the repo)
-contains the full Arista release set, including the missing piece
-that earlier blocked the bring-up:
+`compose.veos.yml` references the Arista 4.36.0.1F release set via
+the in-repo `.tmp/arista/` staging path (gitignored). Artefact roles:
 
-| Artefact | Size | Use |
-|---|---|---|
-| `Aboot-veos-serial-8.0.2.iso` | 6 MB | Bootable ISO with the Aboot bootloader + serial-console support. **This is the file the vrnetlab approach mounts as the primary CDROM** to skip ZTP and serialise the boot output. Without it the qcow2 lands in ZTP-loop forever. |
-| `vEOS64-lab-4.36.0.1F.qcow2` | 613 MB | The EOS root file system (we already had this from `ardl get eos`). |
-| `EOS-4.36.0.1F.swi` / `EOS64-4.36.0.1F.swi` | 1.6 / 1.7 GB | swi for hardware platforms. Reserved for the S10 matrix-test stage. |
-| `EOSuni-4.36.0.1F.swi` | 4.1 GB | Unified swi (cross-platform). Same. |
-| `EOS64-4.36.0.1F-docker.swix` | 111 MB | Docker (cEOS) extension package. |
-| `EOS-4.36.0.1F-CommandApiGuide.pdf` | 4.3 MB | Already indexed in arista-mcp (`document_id: 8a6304f8a31aa03f`) — prefer the MCP query over the local PDF. |
-| `EOS-4.36.0.1F-SysMsgGuide.csv` | 808 KB | Structured table of 2 747 syslog patterns (Facility, Mnemonic, Format, Severity, Explanation, Recommended Action). Reserved for the future eAPI error-mapping work — when the runtime client meets a syslog-id error envelope, it can look up a typed sentinel in this table instead of regex-matching. Tracked as a stretch task; not yet wired in. |
-| `EOS-4.36.0.1F-SysMsgGuide.pdf` | 793 KB | Same content as the CSV in human-readable form. |
-| `Aboot-norcal16-…` | 15 MB | Aboot for hardware (norcal16 platform); not used by vEOS-lab. |
-| `EOS-4.23.9M-glibc64.swix` | 4 MB | Older glibc compatibility shim. Reserved. |
+| Artefact | Size | Role in pulumi-eos |
+|---|---:|---|
+| `Aboot-veos-serial-8.0.2.iso` | 6 MB | Aboot bootloader + serial-console support; mounted as primary CDROM in `compose.veos.yml`. |
+| `vEOS64-lab-4.36.0.1F.qcow2` | 613 MB | EOS root file system; mounted as disk 1. Also fetchable via `ardl get eos --format vEOS64-lab-qcow2`. |
+| `EOS-4.36.0.1F.swi` / `EOS64-4.36.0.1F.swi` | 1.6 / 1.7 GB | Hardware swi; reserved for the S10 matrix-test stage. |
+| `EOSuni-4.36.0.1F.swi` | 4.1 GB | Cross-platform swi; reserved for S10. |
+| `EOS64-4.36.0.1F-docker.swix` | 111 MB | cEOS docker package. |
+| `EOS-4.36.0.1F-CommandApiGuide.pdf` | 4.3 MB | Indexed in `arista-mcp` (`document_id: 8a6304f8a31aa03f`); prefer MCP query over local PDF. |
+| `EOS-4.36.0.1F-SysMsgGuide.csv` | 808 KB | 2 747 syslog rows (Facility · Mnemonic · Format · Severity · Explanation · Recommended Action); reserved for `internal/client/eapi/` typed-sentinel table. |
+| `EOS-4.36.0.1F-SysMsgGuide.pdf` | 793 KB | Same content, PDF render. |
+| `Aboot-norcal16-…` | 15 MB | Aboot for `norcal16` hardware; not used by vEOS-lab. |
+| `EOS-4.23.9M-glibc64.swix` | 4 MB | glibc64 compatibility shim. |
 
-`compose.veos.yml` is wired to mount the Aboot ISO as the primary
-CDROM (`-drive index=0,media=cdrom,boot=d`) and the qcow2 as
-disk 1. With Aboot driving the boot, the vEOS-lab VM finishes
-EOS init stage 2 and (per the TOI 17517 Arfa fast-path) reaches
-the same forwarding-plane state as cEOS-lab — so the surface gain
-in 4.36 is identical between the two targets, but vEOS-lab now
-exposes a real serial console for boot-time diagnostics that
-cEOS-lab cannot.
+Disk layout: Aboot ISO as primary CDROM (`-drive index=0,media=cdrom`,
+`-boot d`), qcow2 as disk 1. Boot reaches "EOS init stage 2" via
+the Aboot serial console; per TOI 17517 (Arfa fast-path) the
+forwarding plane converges to the same state as cEOS-lab — vEOS-lab
+adds a real serial console for boot-time diagnostics, no surface
+gain over cEOS-lab in 4.36.

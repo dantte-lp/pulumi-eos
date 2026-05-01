@@ -9,21 +9,28 @@ and this project adheres to [Semantic Versioning 2.0.0](https://semver.org/spec/
 
 ### Added
 
-- Arista 4.36.0.1F release archive integrated (this commit).
-  User-supplied `EOS-4.36.0.1F.tar` (8 GB) extracted to
-  `/opt/software/arista-extracted/EOS-4.36.0.1F/` (outside the
-  repo; `.tmp/arista` is a symlink). Adds the missing
-  `Aboot-veos-serial-8.0.2.iso` (vEOS bring-up bootloader),
-  `EOS-4.36.0.1F-SysMsgGuide.csv` (2 747 syslog patterns —
-  reserved for future eAPI error-mapping work), the full
-  `.swi` set for hardware-class validation in S10, and the
-  `EOS-4.36.0.1F-CommandApiGuide.pdf` (already indexed in
-  arista-mcp; the local PDF is a fallback). compose.veos.yml
-  now mounts the Aboot ISO as the primary CDROM; vEOS reaches
-  EOS init stage 2 reliably but still hits the ZTP loop because
-  the FAT32-disk `zerotouch-config DISABLE` token is not
-  auto-copied — vrnetlab-style launch.py needed to close the
-  bring-up; tracked as a stretch task.
+- vEOS-lab compose stack: `deployments/compose/compose.veos.yml`
+  mounts `Aboot-veos-serial-8.0.2.iso` as primary CDROM
+  (`-drive index=0,media=cdrom`, `-boot d`), `vEOS64-lab-4.36.0.1F.qcow2`
+  as disk 1, FAT32 ZTP-disable shim as disk 2. Boot reaches "EOS
+  init stage 2" via Aboot serial console; ZTP loop on this disk
+  layout (vrnetlab-style `launch.py` ZTP-bypass deferred).
+- `.gitignore`: `.tmp/` covers the in-repo image staging path
+  (`.tmp/arista/` resolves to local artefacts via symlink; not
+  tracked).
+- `docs/09-emulators.md` artefact table: filenames the compose
+  stack and S10 matrix-test stage reference (`Aboot-veos-serial-8.0.2.iso`,
+  `vEOS64-lab-4.36.0.1F.qcow2`, `EOS-4.36.0.1F.swi`,
+  `EOS64-4.36.0.1F.swi`, `EOSuni-4.36.0.1F.swi`,
+  `EOS64-4.36.0.1F-docker.swix`, `EOS-4.36.0.1F-SysMsgGuide.csv`,
+  `EOS-4.36.0.1F-SysMsgGuide.pdf`,
+  `EOS-4.36.0.1F-CommandApiGuide.pdf`, `Aboot-norcal16-…`,
+  `EOS-4.23.9M-glibc64.swix`).
+- `docs/STATUS.md` Open commitments row: `eAPI error → typed
+  sentinel mapping` retains a SysMsgGuide CSV reference (2 747
+  syslog rows: Facility · Mnemonic · Format · Severity · Explanation
+  · Recommended Action) for the future `internal/client/eapi/`
+  lookup table.
 - `eos:l3:PolicyBasedRouting` resource v0 (S6, Tier 2 #18 —
   closes Tier 2 / S6 18/18, commit `4bc171a`). Top-level
   `policy-map type pbr <name>` with optional service-policy
@@ -39,8 +46,8 @@ and this project adheres to [Semantic Versioning 2.0.0](https://semver.org/spec/
   `set ipv6 nexthop` is wrong (`set nexthop <ipv6-addr>`);
   `set nexthop ... recursive` not in 4.36; each sequence MUST
   reference a unique class-map.
-- Resource-dependency graph in `docs/01-architecture.md`
-  (this commit). Mermaid diagram showing every cross-resource
+- Resource-dependency graph in `docs/01-architecture.md`.
+  Mermaid diagram showing every cross-resource
   edge in S6 + S7 plus the `SslProfile` fan-out (RPKI TLS,
   Certificate, eAPI HTTPS). Drives the dependency-depth tier
   ordering in `docs/STATUS.md`.
@@ -458,10 +465,10 @@ and this project adheres to [Semantic Versioning 2.0.0](https://semver.org/spec/
 
 ### Removed
 
-- `eos:l3:Rpki.Transport` keyword `ssh` (this commit). Per EOS
-  TOI 14470 §Limitations, RPKI RTR supports only TCP and TLS.
-  `ssh` was never a valid EOS keyword. Validator now accepts
-  `{tcp, tls}` only; sentinel error message updated.
+- `eos:l3:Rpki.Transport` keyword `ssh`. Per EOS TOI 14470
+  §Limitations, RPKI RTR supports only TCP and TLS. `ssh` was never
+  a valid EOS keyword. Validator now accepts `{tcp, tls}` only;
+  sentinel error message updated.
 - `eos:l3:RouteMap` `Match.Origin` field (commit `8d7ea48`). EOS
   does not accept `match origin igp|egp|incomplete` — the keyword
   is rejected with "Incomplete token" by every cEOS variant.
@@ -480,7 +487,7 @@ and this project adheres to [Semantic Versioning 2.0.0](https://semver.org/spec/
 
 ### Changed
 
-- S7 Tier 3 ordering re-sequenced by dependency depth (this commit).
+- S7 Tier 3 ordering re-sequenced by dependency depth.
   Previous flat list (3a-3g by topic) replaced with depth-banded
   Tier 3.0 → 3.7. Phase 3.0 (zero-dep device foundation) ships
   before Phase 3.1 (unblockers: `IpAccessList` × 3 families,
@@ -496,14 +503,14 @@ and this project adheres to [Semantic Versioning 2.0.0](https://semver.org/spec/
   surfaces come back as typed Pulumi references rather than
   string fall-backs.
 - `eos:l3:Rpki.Transport` accepted set changed from
-  `{tcp, ssh}` to `{tcp, tls}` (this commit). Backwards-incompatible
-  for any program that used `ssh` — but the previous setting was
-  also incorrect (it never reached running-config; cEOS silently
+  `{tcp, ssh}` to `{tcp, tls}`. Backwards-incompatible for any
+  program that used `ssh` — but the previous setting was also
+  incorrect (it never reached running-config; cEOS silently
   rejected it at commit). New `tls` value emits `transport tls`
   per TOI 14470 §"Configuring secure transport — TLS".
-- Tier 2 ordering re-sequenced by dependency depth (this commit):
-  `ResilientEcmp` ships before `PolicyBasedRouting` in S6 closeout
-  to keep zero-dependency work in front of ACL-coupled work.
+- Tier 2 ordering re-sequenced by dependency depth: `ResilientEcmp`
+  ships before `PolicyBasedRouting` in S6 closeout to keep
+  zero-dependency work in front of ACL-coupled work.
 - Several resource fields newly tagged as cEOSLab platform-quirks
   (input retained, integration body skipped — production EOS
   hardware accepts them all): `eos:l3:GreTunnel.DontFragment`,

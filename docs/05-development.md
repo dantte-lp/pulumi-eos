@@ -49,6 +49,27 @@ The dev container provides Go 1.26.2, Pulumi CLI, golangci-lint, govulncheck, os
 | Auto-format Python audit harness | `make probe-audit-fmt` |
 | Tear down | `make down` |
 
+## Mandatory branch + PR workflow
+
+Sprint work ships on a per-sprint branch. Direct sprint commits to
+`main` are forbidden.
+
+| Step | Command / artefact |
+|---|---|
+| Branch name | `sprint/<sprint-id>-<scope>` (e.g. `sprint/S7-tier-3-0-device-foundation`) |
+| Cut from | `main`, at sprint start (`git switch -c sprint/<id>-<scope>`) |
+| Commits | All sprint commits land on the sprint branch |
+| Sprint close | Open PR `main ← sprint/<…>`; CI green required; merge after review |
+| Post-merge | Delete the sprint branch (`git push origin --delete sprint/<…>`) |
+| Tier numbering | One sprint branch covers all tiers in that sprint (e.g. S7 covers Tier 3.0 → 3.7) |
+| Mid-sprint hot-fix | Stays on the sprint branch — same PR |
+| Cross-sprint maintenance | Doc-style scrubs, repo hygiene, dependency bumps MAY land directly on `main` |
+| Paused sprint | Push the branch; PR sits open; do not rebase a published sprint branch onto a moving `main` without explicit instruction |
+
+Sprint PR body cites the sprint exit-criteria from
+[`02-implementation-plan.md`](02-implementation-plan.md) and links the
+`[Unreleased]` block in [`../CHANGELOG.md`](../CHANGELOG.md).
+
 ## Mandatory per-resource verification rules
 
 Apply on every new resource or CLI-touching change in

@@ -7,16 +7,19 @@
 | Versioning | [SemVer 2.0.0](https://semver.org/spec/v2.0.0.html) |
 | Commits | [Conventional Commits 1.0.0](https://www.conventionalcommits.org/en/v1.0.0/) |
 | Changelog | [Keep a Changelog 1.1.0](https://keepachangelog.com/en/1.1.0/) |
-| Branching | Trunk-based; squash-merge |
+| Branching | Per-sprint branch + PR; squash-merge |
 
 ## Workflow
 
-1. Fork or branch: `feat/<area>/<name>`, `fix/<area>/<name>`, `chore/<area>/<name>`.
+1. **Branch:**
+   - **Sprint work** → `sprint/<sprint-id>-<scope>` (e.g. `sprint/S7-tier-3-0-device-foundation`). One branch per sprint covers all its tiers. Direct sprint commits to `main` are forbidden.
+   - **Maintenance** (doc-style scrubs, dep bumps, repo hygiene) → `feat/<area>/<name>`, `fix/<area>/<name>`, `chore/<area>/<name>`; MAY land on `main` via fast-forward when trivial.
 2. Develop inside the dev container: `make up && make shell`.
 3. `make all` (build + test + lint) must pass locally before pushing.
 4. Commit message follows Conventional Commits 1.0.0; scope = top-level area.
 5. Update `CHANGELOG.md` `[Unreleased]` for any user-visible change.
-6. Open a PR; PR title is itself a Conventional Commit subject.
+6. Open a PR; PR title is itself a Conventional Commit subject. Sprint PR body cites sprint exit-criteria from `docs/02-implementation-plan.md`.
+7. After merge: delete the sprint branch.
 
 ## Commit types
 

@@ -84,8 +84,6 @@ func TestValidateRouteMapMatch(t *testing.T) {
 		{"tag_high", RouteMapMatch{Tag: new(4294967296)}, ErrRouteMapTagOutOfRange},
 		{"metric_neg", RouteMapMatch{Metric: new(-1)}, ErrRouteMapMetricMatchRange},
 		{"localpref_neg", RouteMapMatch{LocalPreference: new(-1)}, ErrRouteMapLocalPrefRange},
-		{"origin_garbage", RouteMapMatch{Origin: new("loopback")}, ErrRouteMapOriginInvalid},
-		{"origin_igp", RouteMapMatch{Origin: new("igp")}, nil},
 		{"sourceproto_garbage", RouteMapMatch{SourceProtocol: new("eigrp")}, ErrRouteMapSourceProtocol},
 		{"sourceproto_bgp", RouteMapMatch{SourceProtocol: new("bgp")}, nil},
 	}
@@ -155,7 +153,6 @@ func TestBuildRouteMapCmds_Full(t *testing.T) {
 					Tag:                 new(7),
 					Metric:              new(100),
 					LocalPreference:     new(200),
-					Origin:              new("igp"),
 					SourceProtocol:      new("bgp"),
 				},
 				Set: &RouteMapSet{
@@ -180,7 +177,6 @@ func TestBuildRouteMapCmds_Full(t *testing.T) {
 		"match community CL1 CL2",
 		"match local-preference 200",
 		"match metric 100",
-		"match origin igp",
 		"match source-protocol bgp",
 		"match tag 7",
 		"set as-path prepend 65000 65001",

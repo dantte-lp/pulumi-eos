@@ -1,0 +1,50 @@
+[project]
+name = "probe-audit"
+version = "0.1.0"
+description = "Commit-terminated probe-audit harness for pulumi-eos l3 resources. Drives every resource's CLI surface against a live cEOS via direct eAPI and reports keyword corrections needed."
+requires-python = ">=3.11"
+license = "Apache-2.0"
+authors = [{ name = "pulumi-eos contributors" }]
+dependencies = []
+
+[project.scripts]
+probe-audit = "probe_audit.__main__:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["probe_audit"]
+
+# === Lint (ruff) ===
+[tool.ruff]
+target-version = "py311"
+line-length = 100
+
+[tool.ruff.lint]
+# Aggressive set: pyflakes (F), pycodestyle (E,W), isort (I), bugbear (B),
+# comprehensions (C4), pep8-naming (N), pyupgrade (UP), pylint (PL),
+# eradicate (ERA), simplify (SIM), pathlib (PTH), security (S).
+select = [
+    "F", "E", "W", "I", "B", "C4", "N", "UP", "PL", "ERA",
+    "SIM", "PTH", "S", "RET", "ARG", "PT", "RUF",
+]
+ignore = [
+    "S101",  # asserts are fine in audit tool
+    "PLR0912", "PLR0913", "PLR0915", "PLR2004",  # complexity OK in audit code
+]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+line-ending = "lf"
+
+# === Type-check (ty) ===
+[tool.ty.environment]
+python-version = "3.11"
+
+[tool.ty.rules]
+unresolved-import = "error"
+unknown-argument = "error"
+type-assertion-failure = "error"

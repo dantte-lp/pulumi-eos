@@ -99,8 +99,10 @@ EVPN/VXLAN fabric.
 | Audit gap — `eos:l3:RouteMap` `match ip address access-list` | follow `eos:security:IpAccessList` (S7) | — |
 | Audit gap — `eos:l3:RouterBgp` v1 surface (per-PG route-map / rcf / password / local-as / default-originate; per-AF redistribute / network; per-VRF neighbors) | S6 closeout — driven by leaf-spine demo coverage gaps | — |
 | ~~Audit gap — `eos:l3:Rcf` inline-code body~~ closed | RCF v1 — three delivery modes (Code / SourceFile / SourceUrl) | — |
-| ~~Audit gap — `eos:device:Device` had no unit/integration tests~~ closed (this commit) | Tests added: `internal/resources/device/device_test.go` + `test/integration/device_test.go` | — |
+| ~~Audit gap — `eos:device:Device` had no unit/integration tests~~ closed | Tests added: `internal/resources/device/device_test.go` + `test/integration/device_test.go` | — |
 | Audit gap — golangci-lint v2.11.4 cloud vs local divergence (goconst on `community_list` / `ext_community_list`) | Closed by `c69195d` — `listType` constants extracted to `internal/resources/l3/types.go` | — |
+| ~~Audit gap — `eos:l3:RouteMap` `match origin` field~~ removed (this commit) | EOS does NOT accept `match origin` — only `set origin` exists. Removed from RouteMapMatch input shape. Use `match route-type` for routing-source filtering. | — |
+| ~~Audit gap — `eos:l3:GreTunnel` `mpls-gre` / `mpls-over-gre` modes~~ deferred to v1 (this commit) | cEOSLab rejects both modes (TOI 18464 — pseudowire requires MPLS fabric). Validator now rejects them at input. Future `eos:l3:GreTunnelMpls` resource will model these alongside MPLS forwarding pieces. | — |
 
 ## Repository activity
 

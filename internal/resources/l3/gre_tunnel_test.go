@@ -19,7 +19,7 @@ func TestValidateGreTunnel(t *testing.T) {
 		{"id_high", func(a GreTunnelArgs) GreTunnelArgs { a.Id = 65536; return a }, ErrGreTunnelIDRange},
 		{"mode_bad", func(a GreTunnelArgs) GreTunnelArgs { a.Mode = new("vxlan"); return a }, ErrGreTunnelModeInvalid},
 		{"mode_gre_ok", func(a GreTunnelArgs) GreTunnelArgs { a.Mode = new("gre"); return a }, nil},
-		{"mode_mpls_gre_ok", func(a GreTunnelArgs) GreTunnelArgs { a.Mode = new("mpls-gre"); return a }, nil},
+		{"mode_mpls_gre_rejected", func(a GreTunnelArgs) GreTunnelArgs { a.Mode = new("mpls-gre"); return a }, ErrGreTunnelModeInvalid},
 		{"src_bad", func(a GreTunnelArgs) GreTunnelArgs { a.Source = new("not-an-ip"); return a }, ErrGreTunnelSourceBadIPv4},
 		{"src_v6", func(a GreTunnelArgs) GreTunnelArgs { a.Source = new("fc00::1"); return a }, ErrGreTunnelSourceBadIPv4},
 		{"src_ok", func(a GreTunnelArgs) GreTunnelArgs { a.Source = new("10.0.0.1"); return a }, nil},

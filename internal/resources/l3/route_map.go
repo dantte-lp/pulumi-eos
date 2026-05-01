@@ -22,7 +22,7 @@ var (
 	ErrRouteMapSeqOutOfRange    = errors.New("routeMap seq must be in 0..65535")
 	ErrRouteMapSeqDuplicate     = errors.New("routeMap seq numbers must be unique within the map")
 	ErrRouteMapActionInvalid    = errors.New("routeMap action must be 'permit' or 'deny'")
-	ErrRouteMapOriginInvalid    = errors.New("routeMap match/set origin must be one of: igp, egp, incomplete")
+	ErrRouteMapOriginInvalid    = errors.New("routeMap set origin must be one of: igp, egp, incomplete")
 	ErrRouteMapSourceProtocol   = errors.New("routeMap match sourceProtocol must be one of: connected, static, isis, ospf, bgp, rip")
 	ErrRouteMapMetricFormat     = errors.New("routeMap set metric must be a positive integer or +N / -N delta")
 	ErrRouteMapNextHopInvalid   = errors.New("routeMap set ipNextHop must be a valid IPv4 address or 'unchanged' / 'self'")
@@ -35,7 +35,11 @@ var (
 )
 
 // validRouteMapOrigin enumerates the BGP origin keywords accepted by
-// `match origin` / `set origin`. Verified live against cEOS 4.36.0.1F.
+// `set origin`. EOS does NOT accept `match origin` (verified live
+// against cEOS 4.36.0.1F via probe-audit — the keyword "Incomplete
+// token" rejects every variant). The Cisco IOS `match origin` clause
+// has no EOS equivalent in v0; use `match route-type` for routing-
+// source filtering.
 var validRouteMapOrigin = map[string]struct{}{
 	"igp":        {},
 	"egp":        {},
@@ -77,7 +81,6 @@ type RouteMapMatch struct {
 	Tag                 *int     `pulumi:"tag,optional"`
 	Metric              *int     `pulumi:"metric,optional"`
 	LocalPreference     *int     `pulumi:"localPreference,optional"`
-	Origin              *string  `pulumi:"origin,optional"`
 	SourceProtocol      *string  `pulumi:"sourceProtocol,optional"`
 }
 
@@ -91,7 +94,6 @@ func (m *RouteMapMatch) Annotate(an infer.Annotator) {
 	an.Describe(&m.Tag, "`match tag <0..4294967295>`.")
 	an.Describe(&m.Metric, "`match metric <0..>`.")
 	an.Describe(&m.LocalPreference, "`match local-preference <0..>`.")
-	an.Describe(&m.Origin, "`match origin igp|egp|incomplete`.")
 	an.Describe(&m.SourceProtocol, "`match source-protocol connected|static|isis|ospf|bgp|rip`.")
 }
 
@@ -296,11 +298,6 @@ func validateRouteMapMatch(m *RouteMapMatch) error {
 	if m.LocalPreference != nil && *m.LocalPreference < 0 {
 		return fmt.Errorf("%w: got %d", ErrRouteMapLocalPrefRange, *m.LocalPreference)
 	}
-	if m.Origin != nil && *m.Origin != "" {
-		if _, ok := validRouteMapOrigin[*m.Origin]; !ok {
-			return fmt.Errorf("%w: got %q", ErrRouteMapOriginInvalid, *m.Origin)
-		}
-	}
 	if m.SourceProtocol != nil && *m.SourceProtocol != "" {
 		if _, ok := validRouteMapSourceProtocol[*m.SourceProtocol]; !ok {
 			return fmt.Errorf("%w: got %q", ErrRouteMapSourceProtocol, *m.SourceProtocol)
@@ -449,9 +446,6 @@ func routeMapMatchCmds(m *RouteMapMatch) []string {
 	}
 	if m.Metric != nil {
 		cmds = append(cmds, "match metric "+strconv.Itoa(*m.Metric))
-	}
-	if m.Origin != nil && *m.Origin != "" {
-		cmds = append(cmds, "match origin "+*m.Origin)
 	}
 	if m.SourceProtocol != nil && *m.SourceProtocol != "" {
 		cmds = append(cmds, "match source-protocol "+*m.SourceProtocol)
@@ -623,9 +617,6 @@ func applyRouteMapMatchLine(m *RouteMapMatch, payload string) {
 		if v, err := strconv.Atoi(strings.TrimPrefix(payload, "local-preference ")); err == nil {
 			m.LocalPreference = &v
 		}
-	case strings.HasPrefix(payload, "origin "):
-		v := strings.TrimPrefix(payload, "origin ")
-		m.Origin = &v
 	case strings.HasPrefix(payload, "source-protocol "):
 		v := strings.TrimPrefix(payload, "source-protocol ")
 		m.SourceProtocol = &v

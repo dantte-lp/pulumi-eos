@@ -200,6 +200,22 @@ lint-spell:
 lint-probes:
 	bash scripts/lint-probes.sh
 
+# probe-audit runs the Python rule-2b auditor against every l3
+# resource's full Args surface. Catches cEOS keyword bugs that the
+# Go integration body trims away for run-time. Tooling: uv + ruff +
+# ty (Astral's type checker), all dev-container resident.
+probe-audit:
+	$(EXEC) sh -c 'cd tools/probe_audit && uv run --with-editable . probe-audit --quiet'
+
+probe-audit-only:
+	$(EXEC) sh -c 'cd tools/probe_audit && uv run --with-editable . probe-audit --only $(ONLY)'
+
+probe-audit-lint:
+	$(EXEC) sh -c 'cd tools/probe_audit && uv tool run ruff check . && uv tool run ruff format --check . && uv tool run ty check probe_audit'
+
+probe-audit-fmt:
+	$(EXEC) sh -c 'cd tools/probe_audit && uv tool run ruff format . && uv tool run ruff check --fix .'
+
 lint-docs: lint-md lint-mmd lint-yaml lint-spell lint-probes
 
 # === Deps ===

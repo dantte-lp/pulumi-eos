@@ -17,7 +17,7 @@ import (
 // Sentinel errors specific to GreTunnel.
 var (
 	ErrGreTunnelIDRange       = errors.New("greTunnel id must be in 0..65535")
-	ErrGreTunnelModeInvalid   = errors.New("greTunnel mode must be gre | mpls-gre | mpls-over-gre | ipsec")
+	ErrGreTunnelModeInvalid   = errors.New("greTunnel mode must be gre | ipsec (mpls-gre / mpls-over-gre deferred to v1)")
 	ErrGreTunnelSourceBadIPv4 = errors.New("greTunnel source must be a valid IPv4 address")
 	ErrGreTunnelDestBadIPv4   = errors.New("greTunnel destination must be a valid IPv4 address")
 	ErrGreTunnelTosRange      = errors.New("greTunnel tos must be in 0..255")
@@ -28,13 +28,19 @@ var (
 )
 
 // validGreTunnelModes enumerates the modes EOS accepts on `tunnel
-// mode <mode>`. Verified live against cEOS 4.36.0.1F via the
-// integration_probe path.
+// mode <mode>`. v0 covers only `gre` and `ipsec` — these are the
+// modes verified to commit on cEOSLab 4.36.0.1F via the rule-2b
+// commit-terminated probe-audit.
+//
+// Deferred to v1: `mpls-gre` and `mpls-over-gre` are pseudowire /
+// MPLS-over-GRE platform-only modes (cf. EOS TOI 18464 — L2 traffic
+// over a GRE tunnel using static MPLS pseudowire). cEOSLab rejects
+// them at commit time. They will be modelled by a future
+// `eos:l3:GreTunnelMpls` resource alongside the MPLS forwarding
+// pieces required to make them functional.
 var validGreTunnelModes = map[string]struct{}{
-	"gre":           {},
-	"mpls-gre":      {},
-	"mpls-over-gre": {},
-	"ipsec":         {},
+	"gre":   {},
+	"ipsec": {},
 }
 
 // GreTunnel models an EOS GRE tunnel interface (`interface Tunnel<id>`).
@@ -45,7 +51,7 @@ var validGreTunnelModes = map[string]struct{}{
 //
 //   - Identity: id (PK, 0..65535).
 //   - Underlay: source / destination IPv4, underlayVrf, mode (gre |
-//     mpls-gre | mpls-over-gre | ipsec).
+//     ipsec).
 //   - Encap: tos, key, mssCeiling, pathMtuDiscovery, dontFragment.
 //   - Overlay: ipAddress (CIDR), vrf, mtu, description, shutdown.
 //
@@ -116,14 +122,14 @@ type GreTunnelState struct {
 
 // Annotate documents the resource.
 func (r *GreTunnel) Annotate(a infer.Annotator) {
-	a.Describe(&r, "An EOS GRE tunnel interface (`interface Tunnel<id>`). v0 covers gre / mpls-gre / mpls-over-gre / ipsec modes; ttl + source-from-interface deferred to v1 (cEOS 4.36 lab quirks).")
+	a.Describe(&r, "An EOS GRE tunnel interface (`interface Tunnel<id>`). v0 covers gre / ipsec modes; ttl + source-from-interface and mpls-gre / mpls-over-gre deferred to v1 (cEOS 4.36 lab quirks + missing MPLS fabric context).")
 }
 
 // Annotate documents GreTunnelArgs fields.
 func (a *GreTunnelArgs) Annotate(an infer.Annotator) {
 	an.Describe(&a.Id, "Tunnel interface id (PK, 0..65535).")
 	an.Describe(&a.Description, "Free-form interface description.")
-	an.Describe(&a.Mode, "Tunnel mode: gre (default) | mpls-gre | mpls-over-gre | ipsec.")
+	an.Describe(&a.Mode, "Tunnel mode: gre (default) | ipsec.")
 	an.Describe(&a.Source, "Underlay source IPv4 address.")
 	an.Describe(&a.Destination, "Underlay destination IPv4 address.")
 	an.Describe(&a.UnderlayVrf, "Non-default VRF for the underlay socket (`tunnel underlay vrf`).")

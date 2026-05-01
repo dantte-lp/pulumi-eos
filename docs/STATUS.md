@@ -66,25 +66,27 @@ Per-group inventory against `docs/03-resource-catalog.md`:
 | `eos:cvp` | 14 | 0 | 14 | 0% | S8 — post-S8 |
 | **Total** | **98** | **31** | **67** | **32%** | — |
 
-## Priority ordering (2026-04-30)
+## Priority ordering (2026-05-01 — dependency-depth re-sequenced)
 
-Closeout tiers — sequenced for end-to-end deployability of a leaf-spine
-EVPN/VXLAN fabric.
+Closeout tiers re-ordered by **explicit dependency depth**: each
+phase ships only resources whose dependencies are satisfied by an
+earlier phase. Within a phase, items are independent.
 
-| Tier | Scope | Resources | Why first |
+| Tier | Scope | Resources | Phase rationale |
 |---|---|---|---|
 | ~~**Tier 1 — Close S4 + S5**~~ | ~~`eos:device:Configlet`~~, ~~`eos:device:RawCli`~~, ~~`eos:l2:MacAddressTable`~~, ~~minimum gNMI client~~ — all shipped. | 0 items | Tier 1 closed; v0.1.0-rc.1 unblocked. |
 | **Tier 2 — Open S6 (L3 critical path)** | ~~`Loopback`~~ → ~~`Vrf`~~ → ~~`Bfd`~~ → ~~`Subinterface`~~ → ~~`StaticRoute`~~ → ~~`RouterBgp`~~ (v0) → ~~`PrefixList`~~ → ~~`RouteMap`~~ → ~~`CommunityList`~~ → ~~`ExtCommunityList`~~ → ~~`AsPathAccessList`~~ → ~~`Rcf`~~ v1 → ~~`Rpki`~~ → ~~`RouterOspf`~~ (v0) → ~~`GreTunnel`~~ (v0) → ~~`Vrrp`~~ (v0) → ~~`ResilientEcmp`~~ (v0) → `PolicyBasedRouting`. | 1 item remaining | Tier 2 ordering re-sequenced by dependency depth (commit `7e6d8c3`): `ResilientEcmp` ships first (top-level `ip hardware fib ecmp resilience` — zero dependencies); `PolicyBasedRouting` ships last (depends on `eos:security:IpAccessList` semantically, but v0 takes the ACL name as a string so it does not block on S7). Audit cycle (commit `8d7ea48`) replaced the abort-only probe path with a commit-terminated Python harness (`tools/probe_audit/`); rule 2c added in `docs/05-development.md`. The audit caught: (a) `RouteMap.Match.Origin` removal (no EOS equivalent — use `match route-type`); (b) `GreTunnel.Mode` narrowed to `{gre, ipsec}` (mpls-* are nexthop-group modes per TOI 13806, not tunnel modes); (c) `Rpki.Transport` `ssh` → `tls` (TOI 14470 §Limitations). |
-| **Tier 3a — S7 management bootstrap** | `Hostname`, `ManagementInterface`, `NtpServer`, `DnsServer`, `Logging`, `EApi`. | 6 items | Required day-zero on every device; trivial shape; enables all subsequent S7 work to drive a real device through Pulumi. |
-| **Tier 3b — S7 security core** | `IpAccessList`, `Ipv6AccessList`, `MacAccessList`, `RoleBasedAccessList`, `UserAccount`, `Role`, `AaaServer`, `AaaAuthentication`, `SslProfile`, `ControlPlanePolicing`, `Urpf`, `ServiceAcl`. | 12 items | Control plane and data-plane policy. ACLs are referenced by routing-policy, PBR, and CoPP, so they unlock cross-resource composition. |
-| **Tier 3c — S7 access-edge (campus)** | `Dot1x`, `Mab`, `Pvlan`, `StormControl`, `DhcpRelay`, `DhcpSnooping`, `DynamicArpInspection`, `IpSourceGuard`, `ArpRateLimit`. | 9 items | Campus / access-layer. Independent of the spine/leaf path. |
-| **Tier 3d — S7 MACsec** | `MacSecProfile`, `MacSecBinding`. | 2 items | DCI / dark-fiber encryption; depends on `Interface` only. |
-| **Tier 3e — S7 multicast** | `Igmp`, `IgmpSnooping`, `Pim`, `AnycastRp`, `Msdp`, `MulticastRoutingTable`. | 6 items | Specialized; ship after security. |
-| **Tier 3f — S7 QoS** | `ClassMap`, `PolicyMap`, `ServicePolicy`, `QosMap`, `PriorityFlowControl`, `BufferProfile`. | 6 items | Specialized; ship last in S7. |
-| **Tier 3g — S7 management extras** | `Snmp`, `Sflow`, `Telemetry`, `EventMonitor`, `PortMirror`. | 5 items | Observability; lower priority than core mgmt. |
-| **Tier 4 — S8 CVP/CVaaS** | `Workspace`, `Studio`, `Configlet`, `ChangeControl`, `Tag`, `Device`, `Inventory`, `ServiceAccount`, `IdentityProvider`, `ImageBundle`, `Compliance`, `Alert`; post-S8: `Dashboard`, `Audit`. | 14 items | Out-of-band orchestration plane; depends on a CVP test instance. |
-| **Tier 5 — S9 Day-2 / gNOI** | `OsImage`, `Reboot`, `Certificate`. | 3 items | Operational lifecycle; gNOI client (separate from gNMI) needed first. |
-| **Tier 6 — post-S9 stretch** | `eos:l3:RouterIsis`, `eos:l3:Nat`, `eos:l2:Cfm`. | 3 items | Specialized / stretch goals; not on the v1.0 critical path. |
+| **Tier 3.0 — S7 device-foundation** (zero deps) | `Hostname`, `NtpServer`, `DnsServer`, `Logging`, `EApi`, `ManagementInterface`. | 6 items | Pure foundation — every other S7 resource references one of these (eAPI itself, mgmt iface for AAA reach, NTP for cert timestamp validation, etc.). Trivial shape, days to ship. |
+| **Tier 3.1 — S7 unblockers** (each unlocks downstream) | `IpAccessList`, `Ipv6AccessList`, `MacAccessList`, `SslProfile`, `Role`. | 5 items | Each item closes an audit gap or unblocks 2+ downstream resources. **`IpAccessList`** unblocks: PBR ACL coupling (current input-string fallback hardens to typed ref), `RouteMap.match ip address access-list` (open audit gap), `ServiceAcl`, `ControlPlanePolicing` policer mappings. **`SslProfile`** unblocks: `Rpki.Transport=tls` (currently input-only because no SSL profile exists), eAPI HTTPS enablement (S5 carry-over), `AaaServer` secure-radius / secure-tacacs. **`Role`** unblocks: `UserAccount`, `RoleBasedAccessList`. |
+| **Tier 3.2 — S7 AAA + access-control** (deps on 3.1) | `UserAccount` (→ `Role`), `RoleBasedAccessList` (→ `Role`), `AaaServer`, `AaaAuthentication` (→ `AaaServer`). | 4 items | Pure dependency chain — must wait for 3.1 to land. |
+| **Tier 3.3 — S7 security-core completion** (deps on 3.1) | `ControlPlanePolicing` (→ `IpAccessList` for policer maps), `Urpf`, `ServiceAcl` (→ `IpAccessList`), `MacSecProfile`, `MacSecBinding` (→ `MacSecProfile`). | 5 items | Closes Tier-3 security surface. MacSec pair self-contained. |
+| **Tier 3.4 — S7 access-edge / campus** (independent) | `Dot1x`, `Mab`, `Pvlan`, `StormControl` (→ `MacAccessList` if rate-limit ACL), `DhcpRelay`, `DhcpSnooping`, `DynamicArpInspection`, `IpSourceGuard`, `ArpRateLimit`. | 9 items | Campus features; mostly independent of the spine/leaf path. Can ship in parallel with 3.5/3.6/3.7. |
+| **Tier 3.5 — S7 multicast** (Pim is the foundation) | `Igmp` (foundation), `IgmpSnooping` (foundation), `Pim`, `AnycastRp` (→ `Pim`), `Msdp` (→ `Pim`), `MulticastRoutingTable`. | 6 items | Multicast layered: snooping + Igmp first, then Pim, then AnycastRp / Msdp on top of Pim. |
+| **Tier 3.6 — S7 QoS** (linear chain) | `ClassMap` → `PolicyMap` (→ `ClassMap`) → `ServicePolicy` (→ `PolicyMap`); `QosMap`, `PriorityFlowControl`, `BufferProfile` (independent). | 6 items | The match→policy→service chain is strictly sequential; the three foundational maps independent. |
+| **Tier 3.7 — S7 mgmt-extras** (independent observability) | `Snmp`, `Sflow`, `Telemetry`, `EventMonitor`, `PortMirror`. | 5 items | All independent; ship in parallel with any other 3.x phase. |
+| **Tier 4 — S8 CVP/CVaaS** | `Workspace`, `Studio`, `Configlet`, `ChangeControl`, `Tag`, `Device`, `Inventory`, `ServiceAccount`, `IdentityProvider`, `ImageBundle`, `Compliance`, `Alert`; post-S8: `Dashboard`, `Audit`. | 14 items | Out-of-band orchestration plane; depends on a CVP test instance, not on S7 EOS resources. Can ship in parallel with S7 (different transport / different test target). |
+| **Tier 5 — S9 Day-2 / gNOI** | gNOI client foundation → `Certificate` (→ `SslProfile` from 3.1) → `OsImage` → `Reboot`. | 3 resources + foundation | Operational lifecycle; gNOI client foundation must land first; `Certificate` benefits from `SslProfile` so should follow Tier 3.1. |
+| **Tier 6 — post-S9 stretch** | `eos:l3:RouterIsis`, `eos:l3:Nat`, `eos:l3:Tracker` (unblocks `Vrrp.Tracks`), `eos:l2:Cfm`, `eos:l3:NexthopGroupMplsOverGre` (unblocks `GreTunnel` MPLS modes). | 5 items | Specialized / stretch; not on the v1.0 critical path. `Tracker` and `NexthopGroupMplsOverGre` exist so deferred surfaces from Tier-2 (`Vrrp.tracked-object`, `GreTunnel.mode=mpls-*`) can be brought back as typed references rather than strings. |
 
 ## Open commitments
 

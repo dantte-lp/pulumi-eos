@@ -60,6 +60,18 @@ flowchart LR
 
 Quality: 33/33 cEOS integration tests pass; 0 issues across 83 golangci-lint linters.
 
+S7 (security / mgmt / multicast / QoS) is sequenced by **dependency
+depth** into Tier 3.0 → 3.7, with `IpAccessList` + `SslProfile`
+prioritised as the biggest unblockers. See
+[`docs/01-architecture.md`](docs/01-architecture.md#resource-dependency-graph-s6--s7)
+for the resource-dependency graph and
+[`docs/STATUS.md`](docs/STATUS.md#priority-ordering-2026-05-01--dependency-depth-re-sequenced)
+for the tier table.
+
+Validation targets (see [`docs/09-emulators.md`](docs/09-emulators.md)):
+cEOS-lab 4.36 (default), vEOS-lab 4.36 (opt-in, full KVM — WIP),
+production hardware (S10 matrix-test stage).
+
 See [`docs/STATUS.md`](docs/STATUS.md) for the live dashboard and
 [`docs/02-implementation-plan.md`](docs/02-implementation-plan.md) for the full sprint plan.
 

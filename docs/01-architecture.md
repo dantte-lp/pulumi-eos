@@ -103,3 +103,79 @@ sequenceDiagram
 | eAPI | Basic over HTTPS · optional mTLS via `management security ssl profile`. |
 | gNMI / gNOI | TLS or mTLS · username via gRPC metadata · gNSI hitless cert rotation (EOS ≥ 4.31). |
 | CVP / CVaaS | Service-account bearer token (`Authorization: Bearer …`) · 1-year max expiry · regional endpoints. |
+
+## Resource-dependency graph (S6 / S7)
+
+This graph captures the dependencies between Pulumi resources that
+drive the **dependency-depth tier ordering** in
+[`docs/STATUS.md` §Priority ordering](STATUS.md). Each edge `A → B`
+means "B references A by name in its Args shape, so A must ship
+first or B falls back to a string-typed reference."
+
+```mermaid
+graph LR
+    subgraph S6["S6 — L3 (in progress 17/18)"]
+      direction TB
+      Loopback --> RouterBgp
+      Loopback --> RouterOspf
+      Loopback --> GreTunnel
+      Vrf --> SVI[VlanInterface]
+      Vrf --> RouterBgp
+      Vrf --> RouterOspf
+      Vrf --> GreTunnel
+      Vlan --> SVI
+      Vlan --> Vxlan[VxlanInterface]
+      Vrf --> Vxlan
+      RouterBgp --> RouteMap
+      RouterBgp --> Rcf
+      RouterBgp --> Bfd
+      RouterBgp --> Rpki
+      RouterOspf --> RouteMap
+      RouterOspf --> Bfd
+      RouteMap --> CommunityList
+      RouteMap --> ExtCommunityList
+      RouteMap --> PrefixList
+      RouteMap --> AsPathAccessList
+      Vrrp -.optional.-> Tracker[Tracker · Tier 6]
+      PolicyBasedRouting -.string-fallback.-> IpAccessList[IpAccessList · Tier 3.1]
+    end
+
+    subgraph S7["S7 — security / mgmt / multicast / qos"]
+      direction TB
+      IpAccessList --> ServiceAcl
+      IpAccessList --> CoPP[ControlPlanePolicing]
+      Role --> UserAccount
+      Role --> RoleBasedAccessList
+      AaaServer --> AaaAuthentication
+      MacSecProfile --> MacSecBinding
+      ClassMap --> PolicyMap
+      PolicyMap --> ServicePolicy
+      Pim --> AnycastRp
+      Pim --> Msdp
+    end
+
+    SslProfile[SslProfile · Tier 3.1] --> RpkiTLS[Rpki TLS transport]
+    SslProfile --> CertS9[Certificate · S9]
+    SslProfile --> EApiHTTPS[eAPI HTTPS]
+
+    classDef shipped fill:#d4ecd5,stroke:#3c8c40,color:#1a1a1a
+    classDef pending fill:#fff4d6,stroke:#c8a25b,color:#1a1a1a
+    classDef stretch fill:#eee,stroke:#777,color:#444,stroke-dasharray:4 3
+    class Loopback,Vrf,Vlan,SVI,Vxlan,RouterBgp,RouterOspf,GreTunnel,RouteMap,Rcf,Bfd,Rpki,CommunityList,ExtCommunityList,PrefixList,AsPathAccessList,Vrrp shipped
+    class PolicyBasedRouting,IpAccessList,Role,UserAccount,RoleBasedAccessList,AaaServer,AaaAuthentication,MacSecProfile,MacSecBinding,ClassMap,PolicyMap,ServicePolicy,Pim,AnycastRp,Msdp,SslProfile,RpkiTLS,EApiHTTPS,ServiceAcl,CoPP pending
+    class Tracker,CertS9 stretch
+```
+
+**Key dependency observations** (drove the Tier 3 re-ordering):
+
+- **`IpAccessList` is the single biggest unblocker** in S7 — it
+  hardens the input string fallback in `PolicyBasedRouting` and
+  closes the open `RouteMap.match ip address access-list` audit gap.
+  Therefore Tier 3.1 ships it first.
+- **`SslProfile` unblocks 3 separate features** (RPKI TLS, Certificate
+  rotation in S9, eAPI HTTPS) — also Tier 3.1.
+- **Pure dependency chains** (3.2 AAA, 3.3 sec-core, 3.6 QoS) ship
+  _after_ their unblockers and serialise within the phase.
+- **Independent campus / mgmt-extras / CVP** can ship in parallel
+  with 3.x phases — they share no Pulumi resource graph edges with
+  the security/AAA path.

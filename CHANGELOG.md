@@ -9,6 +9,17 @@ and this project adheres to [Semantic Versioning 2.0.0](https://semver.org/spec/
 
 ### Added
 
+- Resource-dependency graph in `docs/01-architecture.md`
+  (this commit). Mermaid diagram showing every cross-resource
+  edge in S6 + S7 plus the `SslProfile` fan-out (RPKI TLS,
+  Certificate, eAPI HTTPS). Drives the dependency-depth tier
+  ordering in `docs/STATUS.md`.
+- `docs/09-emulators.md` — full validation-target landscape
+  (cEOS-lab, vEOS-lab, CloudEOS, hardware) with per-target
+  feature reach. Documents that cEOS-lab and vEOS-lab share the
+  same Arfa fast-path since 4.30.1F (TOI 17517) so vEOS-lab
+  doesn't expand surface coverage in 4.36 — only adds
+  serial-console diagnostics.
 - `eos:l3:ResilientEcmp` resource v0 (S6, Tier 2 #17 — dependency-
   reordered, commit `e6606fe`): EOS resilient-ECMP slot-table
   binding. Top-level `[ip|ipv6] hardware fib ecmp resilience
@@ -439,6 +450,21 @@ and this project adheres to [Semantic Versioning 2.0.0](https://semver.org/spec/
 
 ### Changed
 
+- S7 Tier 3 ordering re-sequenced by dependency depth (this commit).
+  Previous flat list (3a-3g by topic) replaced with depth-banded
+  Tier 3.0 → 3.7. Phase 3.0 (zero-dep device foundation) ships
+  before Phase 3.1 (unblockers: `IpAccessList` × 3 families,
+  `SslProfile`, `Role`); 3.1 ships before 3.2 (AAA + RBAC chain)
+  and 3.3 (sec-core completion); 3.4 (campus), 3.5 (multicast),
+  3.6 (QoS chain), 3.7 (mgmt-extras) are the parallelisable tail.
+  Plan §S7 + STATUS Priority-ordering + arch-doc dep-graph all
+  reference the new structure.
+- Tier 6 stretch goals expanded with `eos:l3:Tracker` (unblocks
+  `Vrrp.tracked-object`) and `eos:l3:NexthopGroupMplsOverGre`
+  (unblocks the deferred `GreTunnel.mode={mpls-gre,mpls-over-gre}`
+  surface from commit `8d7ea48`). Both let Tier-2 deferred
+  surfaces come back as typed Pulumi references rather than
+  string fall-backs.
 - `eos:l3:Rpki.Transport` accepted set changed from
   `{tcp, ssh}` to `{tcp, tls}` (this commit). Backwards-incompatible
   for any program that used `ssh` — but the previous setting was

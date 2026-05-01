@@ -65,3 +65,4 @@ docs/_build/
 # Stray mermaid extracts (mmdc working files)
 *.md.*.mmd
 *.markdown.*.mmd
+.tmp/

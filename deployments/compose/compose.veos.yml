@@ -1,0 +1,41 @@
+# compose.veos.yml — vEOS64-lab 4.36 over qemu-KVM in a container.
+#
+# Why a separate compose file: cEOS-lab is a software-fast-path
+# container that boots in seconds; vEOS64-lab is a full KVM VM that
+# boots in ~3-4 min and emulates the production EOS forwarding plane
+# (Arfa) plus hardware-conditional features that cEOSLab omits
+# (subinterface MTU, RPKI TLS transport, resilient ECMP, GRE
+# dont-fragment, NSF graceful-restart full surface).
+#
+# Bring-up:  podman-compose -f deployments/compose/compose.veos.yml up -d
+# eAPI:      http://127.0.0.1:18180/command-api  (admin/admin)
+# Console:   podman attach pulumi-eos-it-veos     (Ctrl-p Ctrl-q to detach)
+#
+# .qcow2 must be at .tmp/arista/vEOS64-lab-4.36.0.1F.qcow2
+# (downloaded via tools/probe_audit-style ardl call; gitignored).
+
+services:
+  veos:
+    # tianon/qemu has qemu-system-x86_64 + qemu-img + KVM tools
+    # pre-installed; saves a 250 MB apt install on every restart.
+    image: docker.io/tianon/qemu:8.2
+    container_name: pulumi-eos-it-veos
+    privileged: true
+    devices:
+      - /dev/kvm:/dev/kvm
+    volumes:
+      - ../../.tmp/arista:/qcow:ro,Z
+      - ./veos-bootstrap.sh:/bootstrap.sh:ro,Z
+    ports:
+      - "127.0.0.1:18180:80"    # eAPI (HTTP)
+      - "127.0.0.1:18444:443"   # eAPI (HTTPS — when enabled)
+      - "127.0.0.1:18022:22"    # SSH
+    healthcheck:
+      test: ["CMD", "sh", "-c", "curl -sf -u admin:admin http://127.0.0.1/command-api -X POST -d '{\"jsonrpc\":\"2.0\",\"method\":\"runCmds\",\"params\":{\"version\":1,\"cmds\":[\"show version\"],\"format\":\"json\"},\"id\":\"hc\"}' >/dev/null"]
+      interval: 30s
+      timeout: 5s
+      retries: 60
+      start_period: 300s
+    command: ["/bootstrap.sh"]
+    stdin_open: true
+    tty: true

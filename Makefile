@@ -133,6 +133,28 @@ test-integration-down:
 test-integration-logs:
 	$(IT_DC) logs -f ceos
 
+# vEOS-lab — full KVM target. Boots in ~3-4 min; same forwarding
+# fast-path (Arfa) as cEOS-lab as of 4.35.2F so the surface gain is
+# limited, but useful for surfaces cEOS-lab silently rejects (none
+# currently identified in 4.36) and for serial-console diagnostics
+# during boot. Image must be at .tmp/arista/vEOS64-lab-4.36.0.1F.qcow2
+# (download via tools/probe_audit-style ardl call; gitignored).
+veos-up:
+	podman-compose -f deployments/compose/compose.veos.yml up -d
+
+veos-down:
+	podman-compose -f deployments/compose/compose.veos.yml down --volumes --remove-orphans
+
+veos-logs:
+	podman-compose -f deployments/compose/compose.veos.yml logs -f veos
+
+# Run the integration body against the vEOS-lab port (18180) instead
+# of cEOS-lab (18080). Same Go test files; target picked via
+# EOS_HOST + EOS_PORT env-vars.
+test-integration-veos:
+	$(EXEC) env EOS_HOST=host.containers.internal EOS_PORT=18180 \
+		go test -tags integration ./test/integration/... -race -count=1 -v
+
 test-acceptance:
 	$(EXEC) go test -tags acceptance ./test/acceptance/... -count=1 -v
 

@@ -95,6 +95,7 @@ make sdks         # generate Go / Python / TypeScript / .NET / Java SDKs
 | Testing | [`docs/06-testing.md`](docs/06-testing.md) |
 | Release | [`docs/07-release.md`](docs/07-release.md) |
 | Research references | [`docs/08-research-references.md`](docs/08-research-references.md) |
+| Emulator landscape | [`docs/09-emulators.md`](docs/09-emulators.md) |
 | Live status | [`docs/STATUS.md`](docs/STATUS.md) |
 | Probe-audit (Python) | [`tools/probe_audit/README.md`](tools/probe_audit/README.md) |
 

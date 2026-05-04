@@ -6,7 +6,7 @@ require (
 	github.com/aristanetworks/goeapi v1.0.0
 	github.com/openconfig/gnmi v0.14.1
 	github.com/pulumi/pulumi-go-provider v1.3.2
-	google.golang.org/grpc v1.80.0
+	google.golang.org/grpc v1.81.0
 )
 
 require (

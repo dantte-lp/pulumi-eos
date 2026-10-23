@@ -5,18 +5,17 @@
 # Build:   podman build -f deployments/containers/Containerfile.dev -t pulumi-eos-dev:local .
 # Run via: deployments/compose/compose.dev.yml (Compose Specification).
 #
-# Image references are unqualified and resolved through Podman's
-# unqualified-search-registries (see deployments/containers/registries.conf).
+# The Go base image is registry-qualified and pinned by digest.
 
-ARG GO_VERSION=1.26.2
+ARG GO_VERSION=1.27.3
 ARG PULUMI_VERSION=3.150.0
-ARG GOLANGCI_LINT_VERSION=v2.11.4
-ARG GOVULNCHECK_VERSION=v1.2.0
-ARG OSV_SCANNER_VERSION=v2.3.5
+ARG GOLANGCI_LINT_VERSION=v2.15.0
+ARG GOVULNCHECK_VERSION=v1.9.0
+ARG OSV_SCANNER_VERSION=v2.7.0
 ARG NODE_MAJOR=22
 ARG PODMAN_PY_VERSION=5.5.0
 
-FROM golang:1.26.2-trixie AS dev
+FROM docker.io/library/golang:1.27.3-trixie@sha256:fbb7ae40b62ff8afe31662df570d39b4f5052ac32b90dae8e60d7657a20a74f4 AS dev
 
 ARG PULUMI_VERSION
 ARG GOLANGCI_LINT_VERSION
@@ -25,7 +24,8 @@ ARG OSV_SCANNER_VERSION
 ARG NODE_MAJOR
 ARG PODMAN_PY_VERSION
 
-ENV GOFLAGS="-buildvcs=false" \
+ENV GOTOOLCHAIN=local \
+    GOFLAGS="-buildvcs=false" \
     GOCACHE=/tmp/go-cache \
     GOMODCACHE=/go/pkg/mod \
     PULUMI_SKIP_UPDATE_CHECK=true \

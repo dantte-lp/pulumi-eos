@@ -286,7 +286,7 @@ pulumi-eos/
 
 | Tool | Version |
 |---|---|
-| Go | `1.26.2` (`golang:1.26.2-trixie`) |
+| Go | `1.26.10` (`golang:1.26.10-trixie`) |
 | Pulumi CLI | `>= 3.130.0` |
 | `pulumi-go-provider` | `>= 0.30.0` |
 | `pulumi/sdk/v3` | `>= 3.130.0` |

@@ -209,7 +209,7 @@ func buildBfdCmds(args BfdArgs, reset bool) []string {
 	}
 	if args.Shutdown != nil {
 		if *args.Shutdown {
-			cmds = append(cmds, "shutdown")
+			cmds = append(cmds, keywordShutdown)
 		} else {
 			cmds = append(cmds, "no shutdown")
 		}
@@ -254,7 +254,7 @@ func parseBfdSection(out string) bfdRow {
 	for raw := range strings.SplitSeq(out, "\n") {
 		line := strings.TrimSpace(raw)
 		switch {
-		case line == "shutdown":
+		case line == keywordShutdown:
 			row.Shutdown = true
 		case strings.HasPrefix(line, "slow-timer "):
 			if v, err := strconv.Atoi(strings.TrimPrefix(line, "slow-timer ")); err == nil {

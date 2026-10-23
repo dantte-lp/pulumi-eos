@@ -159,11 +159,8 @@ func (*Rpki) Read(ctx context.Context, req infer.ReadRequest[RpkiArgs, RpkiState
 		return infer.ReadResponse[RpkiArgs, RpkiState]{}, err
 	}
 	current, found, err := readRpki(ctx, cli, req.Inputs.BgpAsn, req.Inputs.Name)
-	if err != nil {
+	if err != nil || !found {
 		return infer.ReadResponse[RpkiArgs, RpkiState]{}, err
-	}
-	if !found {
-		return infer.ReadResponse[RpkiArgs, RpkiState]{}, nil
 	}
 	state := RpkiState{RpkiArgs: req.Inputs}
 	current.fillState(&state)

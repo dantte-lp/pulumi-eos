@@ -6,6 +6,9 @@ on:
   pull_request:
     branches: [main]
 
+env:
+  GOTOOLCHAIN: local
+
 permissions:
   contents: read
 
@@ -14,7 +17,7 @@ jobs:
     name: Build & test
     runs-on: ubuntu-latest
     container:
-      image: golang:1.26.2-trixie
+      image: docker.io/library/golang:1.27.3-trixie@sha256:fbb7ae40b62ff8afe31662df570d39b4f5052ac32b90dae8e60d7657a20a74f4
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
@@ -81,7 +84,7 @@ jobs:
     name: Lint (Go)
     runs-on: ubuntu-latest
     container:
-      image: golang:1.26.2-trixie
+      image: docker.io/library/golang:1.27.3-trixie@sha256:fbb7ae40b62ff8afe31662df570d39b4f5052ac32b90dae8e60d7657a20a74f4
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
 
@@ -93,7 +96,7 @@ jobs:
 
       - name: golangci-lint v2
         run: |
-          go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.11.4
+          go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.15.0
           golangci-lint run ./...
 
   lint-docs:
@@ -141,7 +144,7 @@ jobs:
     name: Vulnerability audit
     runs-on: ubuntu-latest
     container:
-      image: golang:1.26.2-trixie
+      image: docker.io/library/golang:1.27.3-trixie@sha256:fbb7ae40b62ff8afe31662df570d39b4f5052ac32b90dae8e60d7657a20a74f4
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
 

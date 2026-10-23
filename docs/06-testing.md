@@ -22,7 +22,7 @@ mandatory pre-commit gate documented in
 | Step | Command | Source of truth |
 |---|---|---|
 | Build + race tests | `make test` | Go test runner inside `pulumi-eos-dev`. |
-| Static + style | `make lint` (83 linters) + `make lint-docs` | golangci-lint v2.11.4 + markdownlint + cspell + yamllint + mermaid render + `lint-probes` (rule 2b enforcer). |
+| Static + style | `make lint` (83 linters) + `make lint-docs` | golangci-lint v2.15.0 + markdownlint + cspell + yamllint + mermaid render + `lint-probes` (rule 2b enforcer). |
 | Live cEOS round-trip | `make test-integration-keep` | `pulumi-eos-it-ceos` container; bring-up via `scripts/integration-bootstrap.sh`. |
 
 Recommended on every l3 resource ship (not part of `verify`, run
@@ -60,10 +60,10 @@ Go integration body intentionally trims away.
 
 | Job | Image | Trigger |
 |---|---|---|
-| `build-and-test` | `golang:1.26.10-trixie` | push, PR |
-| `lint-go` | `golang:1.26.10-trixie` | push, PR |
+| `build-and-test` | `golang:1.27.3-trixie` | push, PR |
+| `lint-go` | `golang:1.27.3-trixie` | push, PR |
 | `lint-docs` | `ubuntu-latest` + Node 22 | push, PR |
-| `vulncheck` | `golang:1.26.10-trixie` | push, PR |
+| `vulncheck` | `golang:1.27.3-trixie` | push, PR |
 | `trivy` | `ubuntu-latest` | push, PR |
 | `commitlint` | `ubuntu-latest` + Node 22 | PR only |
 | `codeql`, `gosec` | `ubuntu-latest` | push, PR, weekly |

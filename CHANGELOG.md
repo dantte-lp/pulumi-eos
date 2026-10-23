@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning 2.0.0](https://semver.org/spec/
 
 ### Security
 
-- Update the Go 1.26 toolchain and vulnerable module dependencies; retain
+- Update to Go 1.27.3 on Debian Trixie and refresh module dependencies; retain
   both vulnerability scanners with an empty allowlist.
 
 ### Added
@@ -493,6 +493,9 @@ and this project adheres to [Semantic Versioning 2.0.0](https://semver.org/spec/
   and IETF RFCs.
 
 ### Changed
+
+- Update pulumi-go-provider to 1.7.0, golangci-lint to 2.15.0,
+  govulncheck to 1.9.0, and osv-scanner to 2.7.0.
 
 - S7 Tier 3 ordering re-sequenced by dependency depth.
   Previous flat list (3a-3g by topic) replaced with depth-banded

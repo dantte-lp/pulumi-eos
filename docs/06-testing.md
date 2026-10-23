@@ -60,10 +60,10 @@ Go integration body intentionally trims away.
 
 | Job | Image | Trigger |
 |---|---|---|
-| `build-and-test` | `golang:1.26.2-trixie` | push, PR |
-| `lint-go` | `golang:1.26.2-trixie` | push, PR |
+| `build-and-test` | `golang:1.26.10-trixie` | push, PR |
+| `lint-go` | `golang:1.26.10-trixie` | push, PR |
 | `lint-docs` | `ubuntu-latest` + Node 22 | push, PR |
-| `vulncheck` | `golang:1.26.2-trixie` | push, PR |
+| `vulncheck` | `golang:1.26.10-trixie` | push, PR |
 | `trivy` | `ubuntu-latest` | push, PR |
 | `commitlint` | `ubuntu-latest` + Node 22 | PR only |
 | `codeql`, `gosec` | `ubuntu-latest` | push, PR, weekly |

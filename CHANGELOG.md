@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning 2.0.0](https://semver.org/spec/
 
 ## [Unreleased]
 
+### Security
+
+- Update the Go 1.26 toolchain and vulnerable module dependencies; retain
+  both vulnerability scanners with an empty allowlist.
+
 ### Added
 
 - vEOS-lab compose stack: `deployments/compose/compose.veos.yml`

@@ -1,7 +1,7 @@
 # Go 1.26 patterns, antipatterns, standards
 
-> Project standard for `pulumi-eos`. Pinned to **Go 1.26.2** (dev container
-> `golang:1.26.2-trixie`, host `/usr/local/go`). Aligned with the official
+> Project standard for `pulumi-eos`. Pinned to **Go 1.26.10** (dev container
+> `golang:1.26.10-trixie`, host `/usr/local/go`). Aligned with the official
 > [Go 1.26 release notes](https://go.dev/doc/go1.26).
 
 ## 1. Language features adopted
@@ -41,7 +41,7 @@
 | Area | Standard |
 |---|---|
 | Module path | `github.com/dantte-lp/pulumi-eos`. |
-| Go directive | `go 1.26.2`. |
+| Go directive | `go 1.26.10`. |
 | Layout | `golang-standards/project-layout`. |
 | Errors | Sentinel `var ErrXxx = errors.New("…")` at package level; wrap with `fmt.Errorf("…: %w", err)`; never bare strings (linter `err113`). |
 | Logging | `log/slog`. Required key-value pairs (linter `loggercheck.require-string-key`, `no-printf-like`). |
@@ -65,7 +65,7 @@
 | Heap address randomization | enabled (default) | Mitigates info-leak attack classes. |
 | Goroutine leak profile | enabled in dev container only via `GOEXPERIMENT=goroutineleakprofile` | Diagnostics for the eAPI session semaphore and gRPC clients. |
 | `GOFLAGS` | `-buildvcs=false` | Reproducible builds inside the dev container. |
-| `GOTOOLCHAIN` | system default | Pinned via the `go 1.26.2` directive in `go.mod`. |
+| `GOTOOLCHAIN` | `local` in the pinned image | The image selects Go 1.26.10; `go 1.26.10` sets the module minimum. |
 | Linker | external for cgo where required (`CGO_ENABLED=0`) | Static binary for `pulumi-resource-eos`. |
 
 ## 5. Cryptography & TLS
@@ -97,7 +97,7 @@ Where the project already uses (or should use) a Go 1.26 idiom:
 
 | Tool | Version | Use |
 |---|---|---|
-| `go` | 1.26.2 | language, module, build |
+| `go` | 1.26.10 | language, module, build |
 | `gofmt` / `gofumpt` / `goimports` | bundled / latest | format gate (`golangci-lint formatters`) |
 | `golangci-lint` | `v2.11.4` | aggregate linter; allowlist mode |
 | `go fix` | bundled (revamped in 1.26) | dry-run only — modernization is driven through golangci-lint's `modernize` linter, not `go fix --apply` |

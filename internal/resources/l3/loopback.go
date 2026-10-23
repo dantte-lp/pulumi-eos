@@ -214,7 +214,7 @@ func buildLoopbackCmds(args LoopbackArgs, remove bool) []string {
 		cmds = append(cmds, "ipv6 address "+*args.IPv6Address)
 	}
 	if args.Shutdown != nil && *args.Shutdown {
-		cmds = append(cmds, "shutdown")
+		cmds = append(cmds, keywordShutdown)
 	} else {
 		cmds = append(cmds, "no shutdown")
 	}
@@ -271,7 +271,7 @@ func parseLoopbackConfig(out string, n int) (loopbackRow, bool, error) {
 			row.IPv6Address = strings.TrimPrefix(line, "ipv6 address ")
 		case strings.HasPrefix(line, "ip address "):
 			row.Address = strings.TrimPrefix(line, "ip address ")
-		case line == "shutdown":
+		case line == keywordShutdown:
 			row.Shutdown = true
 		}
 	}

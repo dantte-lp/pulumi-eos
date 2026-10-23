@@ -55,9 +55,9 @@ var validBgpRedistribute = map[string]struct{}{
 // (ipv4-unicast vrf X, l2vpn evpn flow-spec, path-selection) follow
 // when consumers require them.
 var validBgpAddressFamily = map[string]struct{}{
-	"ipv4": {},
-	"ipv6": {},
-	"evpn": {},
+	familyIPv4: {},
+	familyIPv6: {},
+	"evpn":     {},
 }
 
 // RouterBgp models the global EOS BGP routing instance. EOS allows at

@@ -25,8 +25,8 @@ var (
 
 // validResilientEcmpFamily enumerates accepted address families.
 var validResilientEcmpFamily = map[string]struct{}{
-	"ipv4": {},
-	"ipv6": {},
+	familyIPv4: {},
+	familyIPv6: {},
 }
 
 // ResilientEcmp models a top-level
@@ -188,9 +188,9 @@ func canonicaliseFamily(args ResilientEcmpArgs) (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("%w: %q", ErrResilientEcmpPrefixInvalid, args.Prefix)
 	}
-	wantFamily := "ipv4"
+	wantFamily := familyIPv4
 	if pfx.Addr().Is6() {
-		wantFamily = "ipv6"
+		wantFamily = familyIPv6
 	}
 	if args.IpFamily == nil || *args.IpFamily == "" {
 		return wantFamily, nil
@@ -226,15 +226,15 @@ func validateResilientEcmp(args ResilientEcmpArgs) error {
 
 func resilientEcmpID(prefix, family string) string {
 	if family == "" {
-		family = "ipv4"
+		family = familyIPv4
 	}
 	return fmt.Sprintf("resilient-ecmp/%s/%s", family, prefix)
 }
 
 // keyword returns "ip" or "ipv6" depending on the family token.
 func resilientEcmpKeyword(family string) string {
-	if family == "ipv6" {
-		return "ipv6"
+	if family == familyIPv6 {
+		return familyIPv6
 	}
 	return "ip"
 }
@@ -307,7 +307,7 @@ func readResilientEcmp(ctx context.Context, cli *eapi.Client, prefix, family str
 	}
 	out, _ := resp[0]["output"].(string)
 	if family == "" {
-		family = "ipv4"
+		family = familyIPv4
 	}
 	row, found := parseResilientEcmpLines(out, prefix, family)
 	return row, found, nil

@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning 2.0.0](https://semver.org/spec/
 
 ## [Unreleased]
 
+### Security
+
+- Update `golang.org/x/net` to `v0.62.0` and `go-jose/v4` to `v4.1.6` for
+  the reported HTML parsing and JWK/CBC-HMAC vulnerabilities. Go JOSE now
+  rejects RSA JWKs above 4096 bits by default.
+- Pin `golang.org/x/crypto` to `v0.58.1-0.20261009181718-2f1f834330b2`,
+  the upstream OpenPGP module split identified by `GO-2026-5932`; the deprecated
+  OpenPGP package is absent from the selected module without scanner exceptions.
+- Update to Go 1.27.3 on Debian Trixie and refresh module dependencies; retain
+  both vulnerability scanners with an empty allowlist.
+
 ### Added
 
 - vEOS-lab compose stack: `deployments/compose/compose.veos.yml`
@@ -488,6 +499,11 @@ and this project adheres to [Semantic Versioning 2.0.0](https://semver.org/spec/
   and IETF RFCs.
 
 ### Changed
+
+- Pull request metadata edits trigger validation so title checks use the current
+  event title.
+- Update pulumi-go-provider to 1.7.0, golangci-lint to 2.15.0,
+  govulncheck to 1.9.0, and osv-scanner to 2.7.0.
 
 - S7 Tier 3 ordering re-sequenced by dependency depth.
   Previous flat list (3a-3g by topic) replaced with depth-banded

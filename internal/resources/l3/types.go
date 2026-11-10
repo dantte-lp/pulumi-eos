@@ -17,3 +17,10 @@ const (
 	keywordShutdown   = "shutdown"
 	keywordNoShutdown = "no shutdown"
 )
+
+// Shared address-family and tracking action tokens.
+const (
+	familyIPv4     = "ipv4"
+	familyIPv6     = "ipv6"
+	trackDecrement = "decrement"
+)

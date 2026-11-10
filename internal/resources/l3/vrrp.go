@@ -39,8 +39,8 @@ var vrrpInterfaceRe = regexp.MustCompile(`^(Ethernet|Port-Channel|Vlan|Loopback)
 // validVrrpTrackActions enumerates the actions accepted on
 // `vrrp <vrid> track <intf> <action> [N]`.
 var validVrrpTrackActions = map[string]struct{}{
-	"decrement": {},
-	"shutdown":  {},
+	trackDecrement:  {},
+	keywordShutdown: {},
 }
 
 // Vrrp models a single VRRP virtual router under an interface.
@@ -175,11 +175,8 @@ func (*Vrrp) Read(ctx context.Context, req infer.ReadRequest[VrrpArgs, VrrpState
 		return infer.ReadResponse[VrrpArgs, VrrpState]{}, err
 	}
 	current, found, err := readVrrp(ctx, cli, req.Inputs.Interface, req.Inputs.Vrid)
-	if err != nil {
+	if err != nil || !found {
 		return infer.ReadResponse[VrrpArgs, VrrpState]{}, err
-	}
-	if !found {
-		return infer.ReadResponse[VrrpArgs, VrrpState]{}, nil
 	}
 	state := VrrpState{VrrpArgs: req.Inputs}
 	current.fillState(&state)
@@ -248,7 +245,7 @@ func validateVrrp(args VrrpArgs) error {
 		if _, ok := validVrrpTrackActions[e.Action]; !ok {
 			return fmt.Errorf("%w: got %q", ErrVrrpTrackActionInvalid, e.Action)
 		}
-		if e.Action == "decrement" {
+		if e.Action == trackDecrement {
 			if e.Decrement == nil || *e.Decrement < 1 || *e.Decrement > 254 {
 				return fmt.Errorf("%w: got %v", ErrVrrpTrackDecrementRange, e.Decrement)
 			}
@@ -409,13 +406,13 @@ func appendVrrpScalars(cmds []string, args VrrpArgs, vrid string) []string {
 func appendVrrpTracks(cmds []string, tracks []VrrpTrackEntry, vrid string) []string {
 	for _, e := range tracks {
 		switch e.Action {
-		case "decrement":
+		case trackDecrement:
 			d := 0
 			if e.Decrement != nil {
 				d = *e.Decrement
 			}
 			cmds = append(cmds, "vrrp "+vrid+" tracked-object "+e.Interface+" decrement "+strconv.Itoa(d))
-		case "shutdown":
+		case keywordShutdown:
 			cmds = append(cmds, "vrrp "+vrid+" tracked-object "+e.Interface+" shutdown")
 		}
 	}
@@ -578,7 +575,7 @@ func applyVrrpTrack(row *vrrpRow, rest string) {
 		return
 	}
 	switch parts[1] {
-	case "decrement":
+	case trackDecrement:
 		if len(parts) < 3 {
 			return
 		}
@@ -587,11 +584,11 @@ func applyVrrpTrack(row *vrrpRow, rest string) {
 			return
 		}
 		row.Tracks = append(row.Tracks, VrrpTrackEntry{
-			Interface: parts[0], Action: "decrement", Decrement: &v,
+			Interface: parts[0], Action: trackDecrement, Decrement: &v,
 		})
 	case keywordShutdown:
 		row.Tracks = append(row.Tracks, VrrpTrackEntry{
-			Interface: parts[0], Action: "shutdown",
+			Interface: parts[0], Action: keywordShutdown,
 		})
 	}
 }

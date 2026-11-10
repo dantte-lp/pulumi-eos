@@ -14,11 +14,11 @@ services:
       context: ../..
       dockerfile: deployments/containers/Containerfile.dev
       args:
-        GO_VERSION: "1.26.2"
+        GO_VERSION: "1.27.3"
         PULUMI_VERSION: "3.150.0"
-        GOLANGCI_LINT_VERSION: "v2.11.4"
-        GOVULNCHECK_VERSION: "v1.2.0"
-        OSV_SCANNER_VERSION: "v2.3.5"
+        GOLANGCI_LINT_VERSION: "v2.15.0"
+        GOVULNCHECK_VERSION: "v1.9.0"
+        OSV_SCANNER_VERSION: "v2.7.0"
         NODE_MAJOR: "22"
         PODMAN_PY_VERSION: "5.5.0"
 

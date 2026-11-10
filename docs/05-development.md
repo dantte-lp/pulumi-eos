@@ -23,7 +23,7 @@ make up
 make shell
 ```
 
-The dev container provides Go 1.26.2, Pulumi CLI, golangci-lint, govulncheck, osv-scanner, gotestsum, benchstat, markdownlint-cli2, mermaid-cli, cspell, yamllint, junit2html, and podman-py. The host Go toolchain is not required.
+The dev container provides Go 1.27.3, Pulumi CLI, golangci-lint, govulncheck, osv-scanner, gotestsum, benchstat, markdownlint-cli2, mermaid-cli, cspell, yamllint, junit2html, and podman-py. The host Go toolchain is not required.
 
 ## Equivalent automation paths
 
@@ -84,7 +84,7 @@ commit.
 | 2b | **Probes terminate with `commit`, not `abort`.** EOS validates per-line CLI grammar at `Stage` time but only triggers full hardware-platform validation at `commit` (or sometimes `end`). Probes that terminate with `Abort` will mark hardware-unsupported commands as OK and ship them into resources that then fail at runtime (cEOSLab `tunnel dont-fragment` was caught this way — commit `d2ee58a` for `eos:l3:GreTunnel` v0). Per-command isolation probes that need to be cheap MAY use `abort`, but the full-body integration test for the resource MUST `commit` and then explicitly clean up; the probe-tagged file SHOULD have at least one `commit`-terminated combo per command it claims to verify. Rule 2b is enforced by `make lint-probes` (script `scripts/lint-probes.sh`) — direct `*Session.Abort(` in any `probe_*_test.go` outside the helper file fails CI. |
 | 2c | **Cross-resource keyword audit on every l3 ship.** Run `make probe-audit` (Python harness under `tools/probe_audit/`, uv + ruff + ty). The harness drives every l3 resource's full Args-render surface against live cEOS, commit-terminated per probe, and reports per-line accept / reject / cEOSLab platform-quirk. Catches silent-no-op bugs that the Go integration body intentionally trims away (commit `8d7ea48` removed `RouteMap.Match.Origin` and narrowed `GreTunnel.Mode` after this audit fired). The harness is NOT yet wired into `make verify` because surface-spec evolution is tracked manually as new resources ship; run it explicitly during l3 doc-sync cycles. |
 | 3 | **Read-back verification.** Both `show running-config \| section <X>` AND `show running-config all \| section <X>` are exercised at least once per new resource: EOS elides default-equal lines from the plain output, and tests that only inspect the trimmed view will silently pass against incorrectly-rendered configurations. |
-| 4 | **Standard quality gates after each change.** `go build`, `go test -race`, `golangci-lint v2.11.4` (83 linters incl. gosec audit-mode), `govulncheck`, `cspell`, `markdownlint`, `yamllint` — all clean before commit. |
+| 4 | **Standard quality gates after each change.** `go build`, `go test -race`, `golangci-lint v2.15.0` (83 linters incl. gosec audit-mode), `govulncheck`, `cspell`, `markdownlint`, `yamllint` — all clean before commit. |
 
 `make verify` chains build + tests + lint + lint-docs + live cEOS
 integration so the four rules are satisfied with a single invocation.

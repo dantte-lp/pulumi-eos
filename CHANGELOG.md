@@ -500,6 +500,8 @@ and this project adheres to [Semantic Versioning 2.0.0](https://semver.org/spec/
 
 ### Changed
 
+- Pull request metadata edits trigger validation so title checks use the current
+  event title.
 - Update pulumi-go-provider to 1.7.0, golangci-lint to 2.15.0,
   govulncheck to 1.9.0, and osv-scanner to 2.7.0.
 

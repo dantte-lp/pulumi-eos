@@ -25,6 +25,7 @@
     "gofmt",
     "godebug",
     "hpke",
+    "hmac",
     "interfacebloat",
     "mlkem",
     "nakedret",
